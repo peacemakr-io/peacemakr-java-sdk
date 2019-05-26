@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+    id 'maven'
+}
+
+group 'peacemakr'
+version '0.0.1-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+task writePom { 
+    doLast {
+        pom {
+            project {
+                inceptionYear '2018'
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'io.peacemakr'
+                    }
+                }
+            }
+        }.writeTo("$buildDir/pom.xml")
+    }
+}
