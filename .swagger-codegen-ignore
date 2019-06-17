@@ -5,3 +5,4 @@
 */
 !src/main/java/io/swagger/client/
 !src/test/java/io/swagger/client/
+!docs/
