@@ -8,6 +8,9 @@
 *.war
 *.ear
 
+# Include gradle wrapper
+!gradle-wrapper.jar
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
@@ -20,3 +23,8 @@ build
 
 # swagger stuff
 **/swagger.clientclient/
+client/
+build.sbt
+peacemakr-java-sdk.iml
+AndroidManifest.xml
+docs/
