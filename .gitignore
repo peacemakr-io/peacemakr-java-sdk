@@ -17,8 +17,9 @@ hs_err_pid*
 # build files
 **/target
 target
-.gradle
-.idea
+/.gradle
+/.idea
+/.travis.yml
 build
 
 # swagger stuff
