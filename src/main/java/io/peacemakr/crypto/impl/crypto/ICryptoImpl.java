@@ -37,6 +37,12 @@ public class ICryptoImpl implements ICrypto {
   @Override
   public void register() {
 
+    if (org != null) {
+      return;
+    }
+
+
+
   }
 
   @Override
