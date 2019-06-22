@@ -2,13 +2,16 @@ package io.peacemakr.crypto.impl.persister;
 
 import io.peacemakr.crypto.Persister;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class InMemoryPersister implements Persister {
 
     Map<String, String> m;
 
-    public InMemoryPersister() {}
+    public InMemoryPersister() {
+        m = new HashMap<>();
+    }
 
     @Override
     public void save(String key, String value) {

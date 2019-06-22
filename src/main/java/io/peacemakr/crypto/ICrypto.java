@@ -76,8 +76,8 @@ public interface ICrypto {
   byte[] decrypt(byte[] cipherText);
 
   /**
-   * For visibility or debugging purposes, identify which client and configuration this client is running.
-   * Also forwards debug info to peacemakr if phonehome enabled.
+   * For visibility or debugging purposes, returns a string whihc identifies which
+   * client and configuration this client is running.
    */
-  void getDebugInfo();
+  String getDebugInfo();
 }

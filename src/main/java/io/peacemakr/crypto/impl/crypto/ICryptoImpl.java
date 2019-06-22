@@ -3,6 +3,7 @@ package io.peacemakr.crypto.impl.crypto;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.swagger.client.auth.Authentication;
+import io.swagger.client.model.Client;
 import io.swagger.client.model.CryptoConfig;
 import io.swagger.client.model.Organization;
 
@@ -11,12 +12,16 @@ import java.util.logging.Logger;
 public class ICryptoImpl implements ICrypto {
 
   private static final String JAVA_SDK_VERSION = "0.0.1";
+  private static final String PERSISTER_PREFERED_KEYID = "PreferedKeyId";
+
+
   final String apiKey;
   final String clientName;
   final String sdkVersion;
   final String peacemakrHostname;
   Organization org;
   CryptoConfig cryptoConfig;
+  Client client;
   Authentication authentication;
   Persister persister;
   Logger logger;
@@ -81,7 +86,29 @@ public class ICryptoImpl implements ICrypto {
   }
 
   @Override
-  public void getDebugInfo() {
+  public String getDebugInfo() {
+    String orgId;
+    String clientId;
+    String preferedKeyId;
 
+    if (org == null || org.getId() == null) {
+      orgId = "UnknownOrgId";
+    } else {
+      orgId = org.getId();
+    }
+
+    if (persister == null || !persister.exists(PERSISTER_PREFERED_KEYID)) {
+      preferedKeyId = "Unknown" + PERSISTER_PREFERED_KEYID;
+    } else {
+      preferedKeyId = persister.load(PERSISTER_PREFERED_KEYID);
+    }
+
+    if (client == null || client.getId() == null) {
+      clientId = "UnkonwnClientId";
+    } else {
+      clientId = client.getId();
+    }
+
+    return "Peacemakr Java Sdk DebugInfo - orgId=" + orgId + " clientId=" + clientId + " preferedKeyId=" + preferedKeyId;
   }
 }
