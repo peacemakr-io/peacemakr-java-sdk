@@ -2,10 +2,16 @@ package io.peacemakr.crypto.impl.crypto;
 
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
+import io.peacemakr.crypto.exception.ServerError;
+import io.swagger.client.ApiClient;
+import io.swagger.client.ApiException;
+import io.swagger.client.api.ClientApi;
+import io.swagger.client.api.OrgApi;
 import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.Client;
 import io.swagger.client.model.CryptoConfig;
 import io.swagger.client.model.Organization;
+import io.swagger.client.model.PublicKey;
 
 import java.util.logging.Logger;
 
@@ -40,12 +46,44 @@ public class ICryptoImpl implements ICrypto {
   }
 
   @Override
-  public void register() {
+  public void register() throws ServerError {
 
     if (org != null) {
       return;
     }
 
+    OrgApi orgApi = new OrgApi(new ApiClient());
+    Organization myOrg;
+    try {
+      myOrg = orgApi.getOrganization(null);
+    } catch (ApiException e) {
+      throw new ServerError(e.getMessage());
+    }
+
+    this.org = myOrg;
+
+    // TODO: GET CRYPTO CONFIG, DERIVE KEY OF APPROPRIATE TYPE, AND REGISTER THE CLIENT
+
+    Client newClient = new Client();
+    newClient.setId("");
+    newClient.setPublicKey(null); // We
+    newClient.setSdk(JAVA_SDK_VERSION);
+
+    ClientApi clientApi = new ClientApi(new ApiClient());
+    try {
+      // The response from the server will populate our clientId field.
+      newClient = clientApi.addClient(newClient);
+    } catch (ApiException e) {
+      throw new ServerError(e.getMessage());
+    }
+
+    if (newClient == null) {
+      throw new ServerError("Failed to get new client, null returned from server");
+    }
+
+    this.client = newClient;
+
+    // Go off and get the.
 
 
   }
