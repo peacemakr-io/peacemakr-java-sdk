@@ -21,7 +21,7 @@ public interface ICrypto {
    * Sync may fail, if registration was not invoked, if there's network connectivity issues, or
    * unexpected authorization issues.
    */
-  void Sync();
+  void sync();
 
   /**
    * Encrypt the plaintext.
