@@ -27,9 +27,7 @@ jobs:
             sudo echo 1 | sudo update-alternatives --config javac &&
             sudo echo 1 | sudo update-alternatives --config jaotc &&
             java -version
-      - run: docker version
       - run: $(aws ecr get-login --no-include-email --region us-east-2)
-      - run: ls
       - run: docker-compose pull || true
       - run: docker-compose down || true
       - run: docker-compose up -d
