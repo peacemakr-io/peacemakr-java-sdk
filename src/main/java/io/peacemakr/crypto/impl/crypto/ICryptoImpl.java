@@ -100,7 +100,7 @@ public class ICryptoImpl implements ICrypto {
 
     Client newClient = new Client();
     newClient.setId("x");
-    newClient.setPublicKey(publicKey);
+   // newClient.addPublicKeysItem(publicKey) <---- TODO add your public key here.
     newClient.setSdk(JAVA_SDK_VERSION);
 
     ClientApi clientApi = new ClientApi(apiClient);
@@ -116,10 +116,6 @@ public class ICryptoImpl implements ICrypto {
     }
 
     this.client = newClient;
-
-    // Go off and get the.
-
-
   }
 
   @Override

@@ -30,4 +30,8 @@ jobs:
       - run: docker version
       - run: $(aws ecr get-login --no-include-email --region us-east-2)
       - run: ls
+      - run: docker-compose pull || true
+      - run: docker-compose down || true
+      - run: docker-compose up -d
       - run: ./build_sdk.sh
+      - run: docker-compose down || true
