@@ -1,6 +1,7 @@
 package io.peacemakr.crypto;
 
 import io.peacemakr.crypto.exception.PeacemakrException;
+import io.peacemakr.crypto.impl.crypto.ICryptoImpl;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
 import org.junit.After;
 import org.junit.Assert;
@@ -20,7 +21,15 @@ public class ICryptoTest {
     }
 
     @Test
-    public void register() {
+    public void register() throws PeacemakrException {
+
+        // Violate abstration layer for access to internal state for more complete testing + asserting.
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(TestUtils.getApiKey(), "register test", TestUtils.getHostname(), new InMemoryPersister(), null);
+        sdk.register();
+
+        String debug = sdk.getDebugInfo();
+        Assert.assertNotEquals("Peacemakr Java Sdk DebugInfo - orgId=UnknownOrgId clientId=UnkonwnClientId preferedKeyId=UnknownPreferedKeyId", debug);
+
     }
 
     @Test

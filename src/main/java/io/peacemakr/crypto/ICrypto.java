@@ -1,5 +1,6 @@
 package io.peacemakr.crypto;
 
+import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.exception.ServerError;
 
 /**
@@ -14,7 +15,7 @@ public interface ICrypto {
    * Registration may fail with invalid apiKey, missing network connectivity, or an invalid persister. On failure,
    * take corrections action and invoke again.
    */
-  void register() throws ServerError;
+  void register() throws PeacemakrException;
 
   /**
    * Sync all available keys for this client. This invocation will help performance of subsequent encryption

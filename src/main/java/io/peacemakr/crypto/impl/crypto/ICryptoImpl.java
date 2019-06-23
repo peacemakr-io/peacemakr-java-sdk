@@ -1,11 +1,15 @@
 package io.peacemakr.crypto.impl.crypto;
 
+import com.squareup.okhttp.OkHttpClient;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
+import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.exception.ServerError;
+import io.peacemakr.crypto.exception.UnrecoverableClockSkewDetected;
 import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.api.ClientApi;
+import io.swagger.client.api.CryptoConfigApi;
 import io.swagger.client.api.OrgApi;
 import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.Client;
@@ -13,6 +17,7 @@ import io.swagger.client.model.CryptoConfig;
 import io.swagger.client.model.Organization;
 import io.swagger.client.model.PublicKey;
 
+import java.net.http.HttpClient;
 import java.util.logging.Logger;
 
 public class ICryptoImpl implements ICrypto {
@@ -46,35 +51,64 @@ public class ICryptoImpl implements ICrypto {
   }
 
   @Override
-  public void register() throws ServerError {
+  public void register() throws PeacemakrException {
 
     if (org != null) {
       return;
     }
 
-    OrgApi orgApi = new OrgApi(new ApiClient());
+    ApiClient apiClient = new ApiClient();
+    apiClient.setBasePath(peacemakrHostname + "/api/v1");
+    apiClient.setApiKey(apiKey);
+
+    // Populate Org.
+
+    OrgApi orgApi = new OrgApi(apiClient);
     Organization myOrg;
     try {
-      myOrg = orgApi.getOrganization(null);
+      myOrg = orgApi.getOrganizationFromAPIKey(apiKey);
     } catch (ApiException e) {
-      throw new ServerError(e.getMessage());
+      throw new ServerError(e);
     }
-
     this.org = myOrg;
 
-    // TODO: GET CRYPTO CONFIG, DERIVE KEY OF APPROPRIATE TYPE, AND REGISTER THE CLIENT
+    // Populate Crypto config,
+
+    CryptoConfigApi cryptoConfigApi = new CryptoConfigApi(apiClient);
+    CryptoConfig cryptoConfig = null;
+    try {
+      cryptoConfig = cryptoConfigApi.getCryptoConfig(org.getCryptoConfigId());
+    } catch (ApiException e) {
+      throw new ServerError(e);
+    }
+    this.cryptoConfig = cryptoConfig;
+
+
+    // TODO: Actually Dervier a key.  Needed: crypto lib
+
+    PublicKey publicKey = new PublicKey();
+    long seconds = System.currentTimeMillis() / 1000;
+    if (seconds > Integer.MAX_VALUE) {
+      throw new UnrecoverableClockSkewDetected("Failed to detect a valid time for local asymmetric key creation time," +
+              " time expected to be less than " + Integer.MAX_VALUE);
+    }
+    publicKey.setCreationTime((int)seconds);
+    publicKey.setEncoding("pem");
+    publicKey.setId("x");
+    publicKey.setKey("x");
+    publicKey.setKeyType(cryptoConfig.getClientKeyType());
 
     Client newClient = new Client();
-    newClient.setId("");
-    newClient.setPublicKey(null); // We
+    newClient.setId("x");
+    newClient.setPublicKey(publicKey);
     newClient.setSdk(JAVA_SDK_VERSION);
 
-    ClientApi clientApi = new ClientApi(new ApiClient());
+    ClientApi clientApi = new ClientApi(apiClient);
     try {
       // The response from the server will populate our clientId field.
       newClient = clientApi.addClient(newClient);
     } catch (ApiException e) {
-      throw new ServerError(e.getMessage());
+      throw new ServerError(e);
     }
 
     if (newClient == null) {
