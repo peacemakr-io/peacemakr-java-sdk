@@ -1,11 +1,10 @@
 package io.peacemakr.crypto.impl.crypto;
 
-import com.squareup.okhttp.OkHttpClient;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.peacemakr.crypto.exception.PeacemakrException;
-import io.peacemakr.crypto.exception.ServerError;
-import io.peacemakr.crypto.exception.UnrecoverableClockSkewDetected;
+import io.peacemakr.crypto.exception.ServerException;
+import io.peacemakr.crypto.exception.UnrecoverableClockSkewDetectedException;
 import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.api.ClientApi;
@@ -17,7 +16,6 @@ import io.swagger.client.model.CryptoConfig;
 import io.swagger.client.model.Organization;
 import io.swagger.client.model.PublicKey;
 
-import java.net.http.HttpClient;
 import java.util.logging.Logger;
 
 public class ICryptoImpl implements ICrypto {
@@ -68,7 +66,7 @@ public class ICryptoImpl implements ICrypto {
     try {
       myOrg = orgApi.getOrganizationFromAPIKey(apiKey);
     } catch (ApiException e) {
-      throw new ServerError(e);
+      throw new ServerException(e);
     }
     this.org = myOrg;
 
@@ -79,7 +77,7 @@ public class ICryptoImpl implements ICrypto {
     try {
       cryptoConfig = cryptoConfigApi.getCryptoConfig(org.getCryptoConfigId());
     } catch (ApiException e) {
-      throw new ServerError(e);
+      throw new ServerException(e);
     }
     this.cryptoConfig = cryptoConfig;
 
@@ -89,7 +87,7 @@ public class ICryptoImpl implements ICrypto {
     PublicKey publicKey = new PublicKey();
     long seconds = System.currentTimeMillis() / 1000;
     if (seconds > Integer.MAX_VALUE) {
-      throw new UnrecoverableClockSkewDetected("Failed to detect a valid time for local asymmetric key creation time," +
+      throw new UnrecoverableClockSkewDetectedException("Failed to detect a valid time for local asymmetric key creation time," +
               " time expected to be less than " + Integer.MAX_VALUE);
     }
     publicKey.setCreationTime((int)seconds);
@@ -108,11 +106,11 @@ public class ICryptoImpl implements ICrypto {
       // The response from the server will populate our clientId field.
       newClient = clientApi.addClient(newClient);
     } catch (ApiException e) {
-      throw new ServerError(e);
+      throw new ServerException(e);
     }
 
     if (newClient == null) {
-      throw new ServerError("Failed to get new client, null returned from server");
+      throw new ServerException("Failed to get new client, null returned from server");
     }
 
     this.client = newClient;

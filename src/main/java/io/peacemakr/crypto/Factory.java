@@ -1,8 +1,8 @@
 package io.peacemakr.crypto;
 
-import io.peacemakr.crypto.exception.MissingAPIKey;
-import io.peacemakr.crypto.exception.MissingClientName;
-import io.peacemakr.crypto.exception.MissingPersister;
+import io.peacemakr.crypto.exception.MissingAPIKeyException;
+import io.peacemakr.crypto.exception.MissingClientNameException;
+import io.peacemakr.crypto.exception.MissingPersisterException;
 import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.impl.crypto.ICryptoImpl;
 
@@ -13,11 +13,11 @@ public class Factory {
     public static ICrypto getCryptoSDK(String apiKey, String clientName, String peacemakrHostname, Persister persister, Logger logger) throws PeacemakrException {
 
         if (apiKey == null) {
-            throw new MissingAPIKey();
+            throw new MissingAPIKeyException();
         }
 
         if (clientName == null) {
-            throw new MissingClientName();
+            throw new MissingClientNameException();
         }
 
         if (peacemakrHostname == null) {
@@ -25,7 +25,7 @@ public class Factory {
         }
 
         if (persister == null) {
-            throw new MissingPersister();
+            throw new MissingPersisterException();
         }
 
         if (logger == null) {

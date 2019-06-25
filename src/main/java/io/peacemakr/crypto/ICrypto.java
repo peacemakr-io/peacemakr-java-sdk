@@ -1,7 +1,6 @@
 package io.peacemakr.crypto;
 
 import io.peacemakr.crypto.exception.PeacemakrException;
-import io.peacemakr.crypto.exception.ServerError;
 
 /**
  * Created by interstellarPotato on 05/15/2019.

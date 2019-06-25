@@ -1,24 +1,22 @@
 package io.peacemakr.crypto;
 
-import io.peacemakr.crypto.exception.MissingAPIKey;
-import io.peacemakr.crypto.exception.MissingClientName;
-import io.peacemakr.crypto.exception.MissingPersister;
+import io.peacemakr.crypto.exception.MissingAPIKeyException;
+import io.peacemakr.crypto.exception.MissingClientNameException;
+import io.peacemakr.crypto.exception.MissingPersisterException;
 import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
 import org.junit.Test;
 
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
-
 public class FactoryTest {
 
-    @Test(expected = MissingAPIKey.class)
+    @Test(expected = MissingAPIKeyException.class)
     public void getCryptoSDKMissingAPIKey() throws PeacemakrException {
         Factory.getCryptoSDK(null, "", "", new InMemoryPersister(), Logger.getLogger("test"));
     }
 
-    @Test(expected = MissingClientName.class)
+    @Test(expected = MissingClientNameException.class)
     public void getCryptoSDKMissingClientName() throws PeacemakrException {
         Factory.getCryptoSDK("", null, "", new InMemoryPersister(), Logger.getLogger("test"));
     }
@@ -28,7 +26,7 @@ public class FactoryTest {
         Factory.getCryptoSDK("", "", null, new InMemoryPersister(), Logger.getLogger("test"));
     }
 
-    @Test(expected = MissingPersister.class)
+    @Test(expected = MissingPersisterException.class)
     public void getCryptoSDKMissingPersister() throws PeacemakrException {
         Factory.getCryptoSDK("", "", "", null, Logger.getLogger("test"));
     }
