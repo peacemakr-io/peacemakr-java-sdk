@@ -1,5 +1,7 @@
 package io.peacemakr.crypto;
 
+import io.peacemakr.crypto.exception.PeacemakrException;
+
 /**
  * Created by interstellarPotato on 05/15/2019.
  */
@@ -12,16 +14,16 @@ public interface ICrypto {
    * Registration may fail with invalid apiKey, missing network connectivity, or an invalid persister. On failure,
    * take corrections action and invoke again.
    */
-  void register();
+  void register() throws PeacemakrException;
 
   /**
-   * Pre-Load all available keys for this client. This invocation will help performance of subsequent encryption
+   * Sync all available keys for this client. This invocation will help performance of subsequent encryption
    * and decryption calls.
    * <p>
-   * Pre-Loading may fail, if registration was not invoked, if there's network connectivity issues, or
+   * Sync may fail, if registration was not invoked, if there's network connectivity issues, or
    * unexpected authorization issues.
    */
-  void preLoad();
+  void sync();
 
   /**
    * Encrypt the plaintext.
@@ -62,40 +64,6 @@ public interface ICrypto {
   byte[] encryptInDomain(byte[] plainText, String useDomainName);
 
   /**
-   * Signs the original plaintext. Provide non-repudiation for content set by a client.
-   *
-   * @param plaintext Plaintext to sign.
-   * @return Signature of the plaintext. The signature is verified as having come from the client of origin.
-   */
-  String sign(String plaintext);
-
-  /**
-   * Signs the original plaintext. Provide non-repudiation for content set by a client.
-   *
-   * @param plaintext Plaintext to sign.
-   * @return Signature of the plaintext. The signature is verified as having come from the client of origin.
-   */
-  byte[] sign(byte[] plaintext);
-
-  /**
-   * Verifies the signature of the plaintext.
-   *
-   * @param plaintext Plaintext which was signed.
-   * @param signature Signature to verify.
-   * @return Returns true when the signature was successfully verified.
-   */
-  boolean verify(byte[] plaintext, byte[] signature);
-
-  /**
-   * Verifies the signature of the plaintext.
-   *
-   * @param plaintext Plaintext which was signed.
-   * @param signature Signature to verify.
-   * @return Returns true when the signature was successfully verified.
-   */
-  boolean verify(String plaintext, String signature);
-
-  /**
    * Decrypt the opaquely packaged ciphertext and return the original plain text.
    *
    * @param cipherText CipherText to decrypt.
@@ -110,8 +78,8 @@ public interface ICrypto {
   byte[] decrypt(byte[] cipherText);
 
   /**
-   * For visibility or debugging purposes, identify which client and configuration this client is running.
-   * Also forwards debug info to peacemakr if phonehome enabled.
+   * For visibility or debugging purposes, returns a string whihc identifies which
+   * client and configuration this client is running.
    */
-  void getDebugInfo();
+  String getDebugInfo();
 }
