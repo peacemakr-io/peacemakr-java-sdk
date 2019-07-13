@@ -1,5 +1,7 @@
 package io.peacemakr.crypto.impl.crypto;
 
+import io.peacemakr.corecrypto.AsymmetricKey;
+import io.peacemakr.corecrypto.Crypto;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.peacemakr.crypto.exception.PeacemakrException;
@@ -24,17 +26,17 @@ public class ICryptoImpl implements ICrypto {
   private static final String PERSISTER_PREFERED_KEYID = "PreferedKeyId";
 
 
-  final String apiKey;
-  final String clientName;
-  final String sdkVersion;
-  final String peacemakrHostname;
-  Organization org;
-  CryptoConfig cryptoConfig;
-  Client client;
-  Authentication authentication;
-  Persister persister;
-  Logger logger;
-  long lastUpdatedAt;
+  private final String apiKey;
+  private final String clientName;
+  private final String sdkVersion;
+  private final String peacemakrHostname;
+  private Organization org;
+  private CryptoConfig cryptoConfig;
+  private Client client;
+  private Authentication authentication;
+  private Persister persister;
+  private Logger logger;
+  private long lastUpdatedAt;
 
   public ICryptoImpl(String apiKey, String clientName, String peacemakrHostname, Persister persister, Logger logger) {
     this.apiKey = apiKey;
@@ -83,6 +85,40 @@ public class ICryptoImpl implements ICrypto {
 
 
     // TODO: Actually Dervier a key.  Needed: crypto lib
+    Crypto.AsymmetricCryptoTypes clientKeyType;
+    switch (this.cryptoConfig.getClientKeyType()) {
+
+      case "rsa":
+        switch (this.cryptoConfig.getClientKeyBitlength()) {
+          case 2048:
+            clientKeyType = Crypto.AsymmetricCryptoTypes.RSA_2048;
+            break;
+          case 4096:
+          default:
+            clientKeyType = Crypto.AsymmetricCryptoTypes.RSA_4096;
+            break;
+        }
+        break;
+      case "ec":
+        switch (this.cryptoConfig.getClientKeyBitlength()) {
+          case 256:
+            clientKeyType = Crypto.AsymmetricCryptoTypes.EC_256;
+            break;
+          case 384:
+            clientKeyType = Crypto.AsymmetricCryptoTypes.EC_384;
+            break;
+          case 521:
+          default:
+            clientKeyType = Crypto.AsymmetricCryptoTypes.EC_521;
+            break;
+        }
+        break;
+      default:
+        clientKeyType = Crypto.AsymmetricCryptoTypes.EC_521;
+    }
+    AsymmetricKey clientKey = Crypto.genKeypairFromPRNG(clientKeyType);
+    String publicKeyPEM = clientKey.getPubPem();
+    String privateKeyPEM = clientKey.petPemPriv();
 
     PublicKey publicKey = new PublicKey();
     long seconds = System.currentTimeMillis() / 1000;
@@ -92,13 +128,13 @@ public class ICryptoImpl implements ICrypto {
     }
     publicKey.setCreationTime((int)seconds);
     publicKey.setEncoding("pem");
-    publicKey.setId("x");
-    publicKey.setKey("x");
+    publicKey.setId("");
+    publicKey.setKey(publicKeyPEM);
     publicKey.setKeyType(cryptoConfig.getClientKeyType());
 
     Client newClient = new Client();
-    newClient.setId("x");
-   // newClient.addPublicKeysItem(publicKey) <---- TODO add your public key here.
+    newClient.setId("");
+    newClient.addPublicKeysItem(publicKey);
     newClient.setSdk(JAVA_SDK_VERSION);
 
     ClientApi clientApi = new ClientApi(apiClient);
