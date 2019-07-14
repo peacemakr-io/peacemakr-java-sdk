@@ -84,7 +84,6 @@ public class ICryptoImpl implements ICrypto {
     this.cryptoConfig = cryptoConfig;
 
 
-    // TODO: Actually Dervier a key.  Needed: crypto lib
     Crypto.AsymmetricCryptoTypes clientKeyType;
     switch (this.cryptoConfig.getClientKeyType()) {
 
@@ -120,6 +119,9 @@ public class ICryptoImpl implements ICrypto {
     String publicKeyPEM = clientKey.getPubPem();
     String privateKeyPEM = clientKey.petPemPriv();
 
+    this.persister.save("priv", privateKeyPEM);
+    this.persister.save("pub", publicKeyPEM);
+
     PublicKey publicKey = new PublicKey();
     long seconds = System.currentTimeMillis() / 1000;
     if (seconds > Integer.MAX_VALUE) {
@@ -150,6 +152,25 @@ public class ICryptoImpl implements ICrypto {
     }
 
     this.client = newClient;
+
+    if (this.client.getId() == null || this.client.getId().isEmpty()) {
+      throw new ServerException("Failed to register a new clientId during client registration");
+    }
+
+    if (this.client.getPublicKeys().isEmpty()) {
+      throw new ServerException("Failed to register new public keys during client registration");
+    }
+
+    if (this.client.getPublicKeys().get(0) == null) {
+      throw new ServerException("Failed to register, null public key detected during client registration");
+    }
+
+    if (this.client.getPublicKeys().get(0).getId() == null || this.client.getPublicKeys().get(0).getId().isEmpty()) {
+      throw new ServerException("Failed to register, missing public key id detected during client registration");
+    }
+
+    this.persister.save("clientId", this.client.getId());
+    this.persister.save("clientKeyId", this.client.getPublicKeys().get(0).getId());
   }
 
   @Override
