@@ -6,7 +6,7 @@ public class PeacemakrException extends Exception {
         super();
     }
 
-    PeacemakrException(String message) {
+    public PeacemakrException(String message) {
         super(message);
     }
 

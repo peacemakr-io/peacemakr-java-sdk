@@ -23,7 +23,11 @@ import java.util.logging.Logger;
 public class ICryptoImpl implements ICrypto {
 
   private static final String JAVA_SDK_VERSION = "0.0.1";
-  private static final String PERSISTER_PREFERED_KEYID = "PreferedKeyId";
+  private static final String PERSISTER_PRIV_KEY = "Priv";
+  private static final String PERSISTER_PUB_KEY = "Pub";
+  private static final String PERSISTER_CLIENTID_KEY = "ClientId";
+  private static final String PERSISTER_PREFERRED_KEYID = "PreferredKeyId";
+  private static final String PERSISTER_APIKEY_KEY = "ApiKey";
 
 
   private final String apiKey;
@@ -33,10 +37,12 @@ public class ICryptoImpl implements ICrypto {
   private Organization org;
   private CryptoConfig cryptoConfig;
   private Client client;
+  private ApiClient apiClient;
   private Authentication authentication;
   private Persister persister;
   private Logger logger;
   private long lastUpdatedAt;
+
 
   public ICryptoImpl(String apiKey, String clientName, String peacemakrHostname, Persister persister, Logger logger) {
     this.apiKey = apiKey;
@@ -50,16 +56,38 @@ public class ICryptoImpl implements ICrypto {
     this.lastUpdatedAt = 0;
   }
 
-  @Override
-  public void register() throws PeacemakrException {
+  private synchronized String getApiKey() throws PeacemakrException {
+    if (apiKey == null) {
+      throw new PeacemakrException("Missing api key, please provide apiKey when constructing the SDK.");
+    }
+    return apiKey;
+  }
 
-    if (org != null) {
+  private synchronized ApiClient getClient() throws PeacemakrException {
+
+    if (this.apiClient != null) {
+      return apiClient;
+    }
+
+    apiClient = new ApiClient();
+    apiClient.setBasePath(peacemakrHostname + "/api/v1");
+    apiClient.setApiKey(getApiKey());
+
+    // Save this for later.
+    persister.save(PERSISTER_APIKEY_KEY, apiKey);
+
+    // Return.
+    return apiClient;
+  }
+
+  private synchronized void doBootstrap() throws PeacemakrException {
+
+    // If it's already bootstrapped, don't do it agian.
+    if (isBootstraped()) {
       return;
     }
 
-    ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(peacemakrHostname + "/api/v1");
-    apiClient.setApiKey(apiKey);
+    ApiClient apiClient = getClient();
 
     // Populate Org.
 
@@ -82,7 +110,34 @@ public class ICryptoImpl implements ICrypto {
       throw new ServerException(e);
     }
     this.cryptoConfig = cryptoConfig;
+  }
 
+  private boolean isBootstraped() {
+    return org != null && cryptoConfig != null && client != null;
+  }
+
+  private void verifyIsBootstrappedAndRegistered() throws PeacemakrException {
+    if (!isBootstraped() || !isRegisterd()) {
+      throw new PeacemakrException("SDK was not registered, please register before using other SDK operations.");
+    }
+  }
+
+  private boolean isRegisterd() {
+    return persister.exists( PERSISTER_PREFERRED_KEYID) &&
+            persister.exists(PERSISTER_CLIENTID_KEY) &&
+            persister.exists( PERSISTER_PREFERRED_KEYID) &&
+            persister.exists(PERSISTER_PRIV_KEY) &&
+            persister.exists(PERSISTER_PUB_KEY);
+  }
+
+  @Override
+  public synchronized void register() throws PeacemakrException {
+
+    if (isRegisterd()) {
+      return;
+    }
+
+    doBootstrap();
 
     Crypto.AsymmetricCryptoTypes clientKeyType;
     switch (this.cryptoConfig.getClientKeyType()) {
@@ -119,8 +174,8 @@ public class ICryptoImpl implements ICrypto {
     String publicKeyPEM = clientKey.getPubPem();
     String privateKeyPEM = clientKey.petPemPriv();
 
-    this.persister.save("priv", privateKeyPEM);
-    this.persister.save("pub", publicKeyPEM);
+    this.persister.save(PERSISTER_PRIV_KEY, privateKeyPEM);
+    this.persister.save(PERSISTER_PUB_KEY, publicKeyPEM);
 
     PublicKey publicKey = new PublicKey();
     long seconds = System.currentTimeMillis() / 1000;
@@ -139,7 +194,7 @@ public class ICryptoImpl implements ICrypto {
     newClient.addPublicKeysItem(publicKey);
     newClient.setSdk(JAVA_SDK_VERSION);
 
-    ClientApi clientApi = new ClientApi(apiClient);
+    ClientApi clientApi = new ClientApi(getClient());
     try {
       // The response from the server will populate our clientId field.
       newClient = clientApi.addClient(newClient);
@@ -169,42 +224,55 @@ public class ICryptoImpl implements ICrypto {
       throw new ServerException("Failed to register, missing public key id detected during client registration");
     }
 
-    this.persister.save("clientId", this.client.getId());
-    this.persister.save("clientKeyId", this.client.getPublicKeys().get(0).getId());
+    this.persister.save(PERSISTER_CLIENTID_KEY, this.client.getId());
+    this.persister.save( PERSISTER_PREFERRED_KEYID, this.client.getPublicKeys().get(0).getId());
   }
 
   @Override
-  public void sync() {
+  public void sync() throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
 
   }
 
   @Override
-  public String encrypt(String plainText) {
+  public String encrypt(String plainText) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
     return null;
   }
 
   @Override
-  public byte[] encrypt(byte[] plainText) {
+  public byte[] encrypt(byte[] plainText) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
     return new byte[0];
   }
 
   @Override
-  public String encryptInDomain(String plainText, String useDomainName) {
+  public String encryptInDomain(String plainText, String useDomainName) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
     return null;
   }
 
   @Override
-  public byte[] encryptInDomain(byte[] plainText, String useDomainName) {
+  public byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
     return new byte[0];
   }
 
   @Override
-  public String decrypt(String cipherText) {
+  public String decrypt(String cipherText) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
     return null;
   }
 
   @Override
-  public byte[] decrypt(byte[] cipherText) {
+  public byte[] decrypt(byte[] cipherText) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
     return new byte[0];
   }
 
@@ -212,26 +280,25 @@ public class ICryptoImpl implements ICrypto {
   public String getDebugInfo() {
     String orgId;
     String clientId;
-    String preferedKeyId;
+    String preferredKeyId;
 
-    if (org == null || org.getId() == null) {
-      orgId = "UnknownOrgId";
-    } else {
+    orgId = "UnknownOrgId";
+    if (org != null && org.getId() != null) {
       orgId = org.getId();
     }
 
-    if (persister == null || !persister.exists(PERSISTER_PREFERED_KEYID)) {
-      preferedKeyId = "Unknown" + PERSISTER_PREFERED_KEYID;
-    } else {
-      preferedKeyId = persister.load(PERSISTER_PREFERED_KEYID);
+    preferredKeyId = "Unknown" + PERSISTER_PREFERRED_KEYID;
+    if (persister != null && persister.exists( PERSISTER_PREFERRED_KEYID)) {
+      preferredKeyId = persister.load( PERSISTER_PREFERRED_KEYID);
     }
 
-    if (client == null || client.getId() == null) {
-      clientId = "UnkonwnClientId";
-    } else {
+    clientId = "Unknown" + PERSISTER_CLIENTID_KEY;
+    if (client != null && client.getId() != null) {
       clientId = client.getId();
+    } else if (persister != null && persister.exists(PERSISTER_CLIENTID_KEY)) {
+      clientId = persister.load(PERSISTER_CLIENTID_KEY);
     }
 
-    return "Peacemakr Java Sdk DebugInfo - orgId=" + orgId + " clientId=" + clientId + " preferedKeyId=" + preferedKeyId;
+    return "Peacemakr Java Sdk DebugInfo - orgId=" + orgId + " clientId=" + clientId + " preferredKeyId=" + preferredKeyId;
   }
 }

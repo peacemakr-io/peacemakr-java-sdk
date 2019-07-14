@@ -23,7 +23,7 @@ public interface ICrypto {
    * Sync may fail, if registration was not invoked, if there's network connectivity issues, or
    * unexpected authorization issues.
    */
-  void sync();
+  void sync() throws PeacemakrException;
 
   /**
    * Encrypt the plaintext.
@@ -31,7 +31,7 @@ public interface ICrypto {
    * @param plainText Plaintext to encrypt.
    * @return Base64 encoded ciphertext blob on success, else returns an error.
    */
-  String encrypt(String plainText);
+  String encrypt(String plainText) throws PeacemakrException;
 
   /**
    * Encrypt the plaintext.
@@ -39,7 +39,7 @@ public interface ICrypto {
    * @param plainText Plaintext to encrypt.
    * @return Opaquely packaged ciphertext.
    */
-  byte[] encrypt(byte[] plainText);
+  byte[] encrypt(byte[] plainText) throws PeacemakrException;
 
   /**
    * Encrypt the plaintext, but restrict which keys may be used to a Use Domain of this specific name. Names of Use
@@ -53,7 +53,7 @@ public interface ICrypto {
    * @param useDomainName Non-unique User Domain of your organization's.
    * @return Base64 encoded ciphertext blob on success, else returns an error.
    */
-  String encryptInDomain(String plainText, String useDomainName);
+  String encryptInDomain(String plainText, String useDomainName) throws PeacemakrException;
 
   /**
    * Encrypt the plaintext, but restrict which keys may be used to a Use Domain of this specific name.
@@ -61,21 +61,21 @@ public interface ICrypto {
    * @param plainText     Plaintext to encrypt.
    * @param useDomainName Non-unique User Domain of your organization's.
    */
-  byte[] encryptInDomain(byte[] plainText, String useDomainName);
+  byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException;
 
   /**
    * Decrypt the opaquely packaged ciphertext and return the original plain text.
    *
    * @param cipherText CipherText to decrypt.
    */
-  String decrypt(String cipherText);
+  String decrypt(String cipherText) throws PeacemakrException;
 
   /**
    * Decrypt the opaquely packaged ciphertext and return the original plain text.
    *
    * @param cipherText CipherText to decrypt.
    */
-  byte[] decrypt(byte[] cipherText);
+  byte[] decrypt(byte[] cipherText) throws PeacemakrException;
 
   /**
    * For visibility or debugging purposes, returns a string whihc identifies which

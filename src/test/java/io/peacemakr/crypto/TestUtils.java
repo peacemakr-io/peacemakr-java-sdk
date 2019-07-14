@@ -5,7 +5,7 @@ public class TestUtils {
     public static String getHostname() {
         String hostname = System.getenv("PEACEMAKR_TEST_HOSTNAME");
         if (hostname == null) {
-            return "http://localhost:8080";
+            return "https://api.peacemakr.io";
         }
         return hostname;
     }

@@ -64,6 +64,6 @@ public class ICryptoTest {
     public void getDebugInfo() throws PeacemakrException {
         ICrypto sdk = Factory.getCryptoSDK("", "", null, new InMemoryPersister(), null);
         String debug = sdk.getDebugInfo();
-        Assert.assertEquals("Peacemakr Java Sdk DebugInfo - orgId=UnknownOrgId clientId=UnkonwnClientId preferedKeyId=UnknownPreferedKeyId", debug);
+        Assert.assertEquals("Peacemakr Java Sdk DebugInfo - orgId=UnknownOrgId clientId=UnknownClientId preferredKeyId=UnknownPreferredKeyId", debug);
     }
 }
