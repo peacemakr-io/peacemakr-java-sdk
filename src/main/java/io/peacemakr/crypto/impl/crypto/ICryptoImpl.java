@@ -1,7 +1,9 @@
 package io.peacemakr.crypto.impl.crypto;
 
+import io.peacemakr.corecrypto.AsymmetricCipher;
 import io.peacemakr.corecrypto.AsymmetricKey;
 import io.peacemakr.corecrypto.Crypto;
+import io.peacemakr.corecrypto.SymmetricCipher;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.peacemakr.crypto.exception.PeacemakrException;
@@ -83,6 +85,14 @@ public class ICryptoImpl implements ICrypto {
 
   private synchronized void doBootstrap() throws PeacemakrException {
 
+    // Loads the crypto lib, if not done so already.
+    try {
+      Crypto.init();
+    } catch (java.lang.UnsatisfiedLinkError e) {
+      throw new PeacemakrException("Failed to link peacemakr core cryptolib: " + e.getMessage());
+    }
+
+
     // If it's already bootstrapped, don't do it agian.
     if (isBootstraped()) {
       return;
@@ -140,40 +150,43 @@ public class ICryptoImpl implements ICrypto {
 
     doBootstrap();
 
-    Crypto.AsymmetricCryptoTypes clientKeyType;
+    AsymmetricCipher clientKeyType;
     switch (this.cryptoConfig.getClientKeyType()) {
 
       case "rsa":
         switch (this.cryptoConfig.getClientKeyBitlength()) {
           case 2048:
-            clientKeyType = Crypto.AsymmetricCryptoTypes.RSA_2048;
+            clientKeyType = AsymmetricCipher.RSA_2048;
             break;
           case 4096:
           default:
-            clientKeyType = Crypto.AsymmetricCryptoTypes.RSA_4096;
+            clientKeyType = AsymmetricCipher.RSA_4096;
             break;
         }
         break;
       case "ec":
         switch (this.cryptoConfig.getClientKeyBitlength()) {
           case 256:
-            clientKeyType = Crypto.AsymmetricCryptoTypes.EC_256;
+            clientKeyType = AsymmetricCipher.ECDH_P256;
             break;
           case 384:
-            clientKeyType = Crypto.AsymmetricCryptoTypes.EC_384;
+            clientKeyType = AsymmetricCipher.ECDH_P384;
             break;
           case 521:
           default:
-            clientKeyType = Crypto.AsymmetricCryptoTypes.EC_521;
+            clientKeyType = AsymmetricCipher.ECDH_P521;
             break;
         }
         break;
       default:
-        clientKeyType = Crypto.AsymmetricCryptoTypes.EC_521;
+        clientKeyType = AsymmetricCipher.ECDH_P521;
     }
-    AsymmetricKey clientKey = Crypto.genKeypairFromPRNG(clientKeyType);
-    String publicKeyPEM = clientKey.getPubPem();
-    String privateKeyPEM = clientKey.petPemPriv();
+
+
+
+    AsymmetricKey clientKey = AsymmetricKey.fromPRNG(clientKeyType, SymmetricCipher.SYMMETRIC_UNSPECIFIED);
+    String publicKeyPEM = clientKey.getPubPemStr();
+    String privateKeyPEM = clientKey.getPrivPemStr();
 
     this.persister.save(PERSISTER_PRIV_KEY, privateKeyPEM);
     this.persister.save(PERSISTER_PUB_KEY, publicKeyPEM);
