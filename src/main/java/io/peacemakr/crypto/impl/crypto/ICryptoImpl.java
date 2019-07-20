@@ -11,13 +11,14 @@ import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.api.ClientApi;
 import io.swagger.client.api.CryptoConfigApi;
+import io.swagger.client.api.KeyServiceApi;
 import io.swagger.client.api.OrgApi;
 import io.swagger.client.auth.Authentication;
-import io.swagger.client.model.Client;
-import io.swagger.client.model.CryptoConfig;
-import io.swagger.client.model.Organization;
-import io.swagger.client.model.PublicKey;
+import io.swagger.client.model.*;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class ICryptoImpl implements ICrypto {
@@ -228,17 +229,45 @@ public class ICryptoImpl implements ICrypto {
     this.persister.save( PERSISTER_PREFERRED_KEYID, this.client.getPublicKeys().get(0).getId());
   }
 
+  private void decryptAndSave(List<EncryptedSymmetricKey> allKeys) {
+    // TODO: yea, do this.
+  }
+
+  private void updateLocalCryptoConfig(CryptoConfig newConfig) {
+    // TODO: yea, do this too.
+  }
+
   @Override
   public void sync() throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
+
+    CryptoConfigApi cryptoConfigApi = new CryptoConfigApi(getClient());
+    try {
+      CryptoConfig newConfig = cryptoConfigApi.getCryptoConfig(this.cryptoConfig.getId());
+      if (newConfig.equals(this.cryptoConfig)) {
+        // Do nothing.
+      } else {
+        updateLocalCryptoConfig(newConfig);
+      }
+    } catch ( ApiException e) {
+      throw new ServerException(e);
+    }
+
+    KeyServiceApi keyServiceApi = new KeyServiceApi(getClient());
+    try {
+      // The response from the server will populate our clientId field.
+      List<EncryptedSymmetricKey> allKeys = keyServiceApi.getAllEncryptedKeys(this.client.getPreferredPublicKeyId(), null);
+      decryptAndSave(allKeys);
+    } catch (ApiException e) {
+      throw new ServerException(e);
+    }
 
   }
 
   @Override
   public String encrypt(String plainText) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
-
-    return null;
+    return new String(encrypt(plainText.getBytes( StandardCharsets.UTF_8)));
   }
 
   @Override
@@ -251,8 +280,7 @@ public class ICryptoImpl implements ICrypto {
   @Override
   public String encryptInDomain(String plainText, String useDomainName) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
-
-    return null;
+    return new String(encryptInDomain(plainText.getBytes( StandardCharsets.UTF_8), useDomainName));
   }
 
   @Override
@@ -265,8 +293,7 @@ public class ICryptoImpl implements ICrypto {
   @Override
   public String decrypt(String cipherText) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
-
-    return null;
+    return new String(decrypt(cipherText.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
