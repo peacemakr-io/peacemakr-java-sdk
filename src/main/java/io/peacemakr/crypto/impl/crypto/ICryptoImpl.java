@@ -33,6 +33,8 @@ public class ICryptoImpl implements ICrypto {
   private static final String PERSISTER_PREFERRED_KEYID = "PreferredKeyId";
   private static final String PERSISTER_APIKEY_KEY = "ApiKey";
 
+  private static final AsymmetricCipher UGLY_HACK_UNTIL_PEM_WORKS = AsymmetricCipher.RSA_4096;
+
 
   private static final String Chacha20Poly1305 = "Peacemakr.Symmetric.CHACHA20_POLY1305";
   private static final String Aes128gcm        = "Peacemakr.Symmetric.AES_128_GCM";
@@ -196,6 +198,9 @@ public class ICryptoImpl implements ICrypto {
       default:
         clientKeyType = AsymmetricCipher.ECDH_P521;
     }
+
+    clientKeyType = UGLY_HACK_UNTIL_PEM_WORKS;
+    logger.error("DUE TO A UGLY HACK, you get a key type of " + UGLY_HACK_UNTIL_PEM_WORKS);
 
 
     SymmetricCipher thisIsNeverUsed = SymmetricCipher.CHACHA20_POLY1305;
@@ -424,16 +429,23 @@ public class ICryptoImpl implements ICrypto {
 
   }
 
-  private AsymmetricKey getSigningKey() {
+  private AsymmetricKey getSigningKey(SymmetricKeyUseDomain useDomain) {
 
+    // If this is null, no message signing.
+    if (useDomain.getDigestAlgorithm() == null) {
+      return null;
+    }
+
+    // If we've already loaded this, just re-use it.
     if (this.loadedPrivatePreferredKey != null) {
       return this.loadedPrivatePreferredKey;
     }
 
+    // Create it.
     String privatePem = this.persister.load(PERSISTER_PRIV_KEY);
-    // this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(privatePem, SymmetricCipher.CHACHA20_POLY1305)
+    this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(UGLY_HACK_UNTIL_PEM_WORKS, SymmetricCipher.CHACHA20_POLY1305, privatePem);
 
-    return null;
+    return this.loadedPrivatePreferredKey;
   }
 
   @Override
@@ -453,16 +465,11 @@ public class ICryptoImpl implements ICrypto {
     }
 
     SymmetricCipher symmetricCipher = getSymmetricCipher(useDomainForEncrytpion.getSymmetricKeyEncryptionAlg());
-
-    AsymmetricKey signingKey = getSigningKey();
-
+    AsymmetricKey signingKey = getSigningKey(useDomainForEncrytpion);
     Crypto.MessageDigest digest = getDigestAlg(useDomainForEncrytpion.getDigestAlgorithm());
 
-    Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, new byte[]{}, digest);
-
-
-
-    return new byte[0];
+    byte[] encryptedBlob = Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, new byte[]{}, digest);
+    return encryptedBlob;
   }
 
   @Override
