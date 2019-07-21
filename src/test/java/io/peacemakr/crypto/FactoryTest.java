@@ -5,9 +5,8 @@ import io.peacemakr.crypto.exception.MissingClientNameException;
 import io.peacemakr.crypto.exception.MissingPersisterException;
 import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
+import org.apache.log4j.Logger;
 import org.junit.Test;
-
-import java.util.logging.Logger;
 
 public class FactoryTest {
 

@@ -6,9 +6,7 @@ import io.peacemakr.corecrypto.Crypto;
 import io.peacemakr.corecrypto.SymmetricCipher;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
-import io.peacemakr.crypto.exception.PeacemakrException;
-import io.peacemakr.crypto.exception.ServerException;
-import io.peacemakr.crypto.exception.UnrecoverableClockSkewDetectedException;
+import io.peacemakr.crypto.exception.*;
 import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.api.ClientApi;
@@ -17,13 +15,14 @@ import io.swagger.client.api.KeyServiceApi;
 import io.swagger.client.api.OrgApi;
 import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.*;
+import org.apache.log4j.Logger;
 
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Logger;
 
 public class ICryptoImpl implements ICrypto {
 
@@ -34,6 +33,18 @@ public class ICryptoImpl implements ICrypto {
   private static final String PERSISTER_PREFERRED_KEYID = "PreferredKeyId";
   private static final String PERSISTER_APIKEY_KEY = "ApiKey";
 
+
+  private static final String Chacha20Poly1305 = "Peacemakr.Symmetric.CHACHA20_POLY1305";
+  private static final String Aes128gcm        = "Peacemakr.Symmetric.AES_128_GCM";
+  private static final String Aes192gcm        = "Peacemakr.Symmetric.AES_192_GCM";
+  private static final String Aes256gcm        = "Peacemakr.Symmetric.AES_256_GCM";
+  private static final SymmetricCipher DEFAULT_SYMMETRIC_CIPHER = SymmetricCipher.CHACHA20_POLY1305;
+
+  private static final String Sha224 = "Peacemakr.Digest.SHA_224";
+  private static final String Sha256 = "Peacemakr.Digest.SHA_256";
+  private static final String Sha384 = "Peacemakr.Digest.SHA_384";
+  private static final String Sha512 = "Peacemakr.Digest.SHA_512";
+  private static final Crypto.MessageDigest DEFAULT_MESSAGE_DIGEST = Crypto.MessageDigest.SHA_256;
 
   private final String apiKey;
   private final String clientName;
@@ -47,6 +58,7 @@ public class ICryptoImpl implements ICrypto {
   private Persister persister;
   private Logger logger;
   private long lastUpdatedAt;
+  private AsymmetricKey loadedPrivatePreferredKey;
 
 
   public ICryptoImpl(String apiKey, String clientName, String peacemakrHostname, Persister persister, Logger logger) {
@@ -269,15 +281,19 @@ public class ICryptoImpl implements ICrypto {
       throw new ServerException(e);
     }
 
+    downloadAndSaveAllKeys(null);
+
+  }
+
+  private void downloadAndSaveAllKeys(List<String> requiredKeyIds) throws PeacemakrException {
     KeyServiceApi keyServiceApi = new KeyServiceApi(getClient());
     try {
       // The response from the server will populate our clientId field.
-      List<EncryptedSymmetricKey> allKeys = keyServiceApi.getAllEncryptedKeys(this.client.getPreferredPublicKeyId(), null);
+      List<EncryptedSymmetricKey> allKeys = keyServiceApi.getAllEncryptedKeys(this.client.getPreferredPublicKeyId(), requiredKeyIds);
       decryptAndSave(allKeys);
     } catch (ApiException e) {
       throw new ServerException(e);
     }
-
   }
 
   @Override
@@ -321,9 +337,130 @@ public class ICryptoImpl implements ICrypto {
     return new String(encryptInDomain(plainText.getBytes( StandardCharsets.UTF_8), useDomainName));
   }
 
+  private SymmetricKeyUseDomain getValidUseDomainForEncryption(String useDomain) throws NoValidUseDomainsForEncryptionOperation {
+
+      List<SymmetricKeyUseDomain> useDomains = this.cryptoConfig.getSymmetricKeyUseDomains();
+      List<SymmetricKeyUseDomain> validDomainWithThisName = new ArrayList<>();
+
+      SymmetricKeyUseDomain selectedDomain = null;
+
+      for (SymmetricKeyUseDomain domain : useDomains) {
+        if (!domain.getName().equals(useDomain)) {
+          continue;
+        }
+        if (!domainIsValidForEncryption(domain)) {
+          continue;
+        }
+        if (!domain.getEncryptionKeyIds().isEmpty()) {
+          continue;
+        }
+        validDomainWithThisName.add(domain);
+      }
+
+      if (validDomainWithThisName.isEmpty()) {
+        throw new NoValidUseDomainsForEncryptionOperation();
+      }
+
+      return validDomainWithThisName.get(ThreadLocalRandom.current().nextInt(validDomainWithThisName.size()));
+  }
+
+  private String getEncryptionKeyId(SymmetricKeyUseDomain useDomain) {
+
+    int randomId = ThreadLocalRandom.current().nextInt(useDomain.getEncryptionKeyIds().size());
+
+    return useDomain.getEncryptionKeyIds().get(randomId);
+  }
+
+  private byte[] getKey(String keyId) throws UnsupportedEncodingException, PeacemakrException {
+
+    if (this.persister.exists(keyId)) {
+      String key = this.persister.load(keyId);
+      return Base64.getDecoder().decode(key.getBytes("UTF-8"));
+    }
+
+    List<String> requiredKeys = new ArrayList<>();
+    requiredKeys.add(keyId);
+    downloadAndSaveAllKeys(requiredKeys);
+
+    if (!this.persister.exists(keyId)) {
+      throw new FailedToDownloadKey("KeyId: " + keyId);
+    }
+
+    String key = this.persister.load(keyId);
+    return Base64.getDecoder().decode(key.getBytes("UTF-8"));
+  }
+
+  private SymmetricCipher getSymmetricCipher(String symmetricKeyEncryptionAlg) {
+    switch (symmetricKeyEncryptionAlg) {
+      case Chacha20Poly1305:
+        return SymmetricCipher.CHACHA20_POLY1305;
+      case Aes128gcm:
+        return SymmetricCipher.AES_128_GCM;
+      case Aes192gcm:
+        return SymmetricCipher.AES_192_GCM;
+      case Aes256gcm:
+        return SymmetricCipher.AES_256_GCM;
+      default:
+        logger.warn("unrecognized symmetric cipher from server: " + symmetricKeyEncryptionAlg + ", defaulting to " + DEFAULT_SYMMETRIC_CIPHER);
+        return DEFAULT_SYMMETRIC_CIPHER;
+    }
+  }
+
+  private Crypto.MessageDigest getDigestAlg(String digestAlgorithm) {
+
+    switch (digestAlgorithm) {
+      case Sha224:
+        return Crypto.MessageDigest.SHA_224;
+      case Sha256:
+        return Crypto.MessageDigest.SHA_256;
+      case Sha384:
+        return Crypto.MessageDigest.SHA_384;
+      case Sha512:
+        return Crypto.MessageDigest.SHA_512;
+      default:
+        logger.warn("Unknown digest alg " + digestAlgorithm + ", so using the default of " + DEFAULT_MESSAGE_DIGEST);
+        return DEFAULT_MESSAGE_DIGEST;
+    }
+
+  }
+
+  private AsymmetricKey getSigningKey() {
+
+    if (this.loadedPrivatePreferredKey != null) {
+      return this.loadedPrivatePreferredKey;
+    }
+
+    String privatePem = this.persister.load(PERSISTER_PRIV_KEY);
+    // this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(privatePem, SymmetricCipher.CHACHA20_POLY1305)
+
+    return null;
+  }
+
   @Override
   public byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
+
+    SymmetricKeyUseDomain useDomainForEncrytpion = getValidUseDomainForEncryption(useDomainName);
+
+    String encryptionKeyIdforEncryption = getEncryptionKeyId(useDomainForEncrytpion);
+
+    byte[] key = null;
+    try {
+      key = getKey(encryptionKeyIdforEncryption);
+    } catch (UnsupportedEncodingException e) {
+      logger.error("Failed to get key due to ", e);
+      throw new PersistenceLayerCorruptionDetected(e);
+    }
+
+    SymmetricCipher symmetricCipher = getSymmetricCipher(useDomainForEncrytpion.getSymmetricKeyEncryptionAlg());
+
+    AsymmetricKey signingKey = getSigningKey();
+
+    Crypto.MessageDigest digest = getDigestAlg(useDomainForEncrytpion.getDigestAlgorithm());
+
+    Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, new byte[]{}, digest);
+
+
 
     return new byte[0];
   }

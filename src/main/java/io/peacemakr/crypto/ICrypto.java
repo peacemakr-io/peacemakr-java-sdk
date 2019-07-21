@@ -2,6 +2,8 @@ package io.peacemakr.crypto;
 
 import io.peacemakr.crypto.exception.PeacemakrException;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Created by interstellarPotato on 05/15/2019.
  */
@@ -61,7 +63,7 @@ public interface ICrypto {
    * @param plainText     Plaintext to encrypt.
    * @param useDomainName Non-unique User Domain of your organization's.
    */
-  byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException;
+  byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException, UnsupportedEncodingException;
 
   /**
    * Decrypt the opaquely packaged ciphertext and return the original plain text.

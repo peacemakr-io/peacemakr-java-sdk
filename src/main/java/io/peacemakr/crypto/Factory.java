@@ -5,8 +5,7 @@ import io.peacemakr.crypto.exception.MissingClientNameException;
 import io.peacemakr.crypto.exception.MissingPersisterException;
 import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.impl.crypto.ICryptoImpl;
-
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 
 public class Factory {
 
@@ -29,7 +28,7 @@ public class Factory {
         }
 
         if (logger == null) {
-            logger = Logger.getLogger("PeacemakrDefaultLogger");
+            logger = Logger.getLogger(ICrypto.class);
         }
 
         return new ICryptoImpl(apiKey, clientName, peacemakrHostname, persister, logger);
