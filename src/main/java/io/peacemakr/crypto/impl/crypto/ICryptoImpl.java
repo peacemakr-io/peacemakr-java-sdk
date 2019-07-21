@@ -183,8 +183,8 @@ public class ICryptoImpl implements ICrypto {
     }
 
 
-
-    AsymmetricKey clientKey = AsymmetricKey.fromPRNG(clientKeyType, SymmetricCipher.SYMMETRIC_UNSPECIFIED);
+    SymmetricCipher thisIsNeverUsed = SymmetricCipher.CHACHA20_POLY1305;
+    AsymmetricKey clientKey = AsymmetricKey.fromPRNG(clientKeyType, thisIsNeverUsed);
     String publicKeyPEM = clientKey.getPubPemStr();
     String privateKeyPEM = clientKey.getPrivPemStr();
 
