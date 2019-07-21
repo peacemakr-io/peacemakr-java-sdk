@@ -20,7 +20,9 @@ import io.swagger.client.model.*;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 public class ICryptoImpl implements ICrypto {
@@ -283,11 +285,33 @@ public class ICryptoImpl implements ICrypto {
     return new String(encrypt(plainText.getBytes( StandardCharsets.UTF_8)));
   }
 
+  private boolean domainIsValidForEncryption(SymmetricKeyUseDomain domain) {
+    return domain.getCreationTime() + domain.getSymmetricKeyEncryptionUseTTL() < (System.currentTimeMillis() / 1000);
+  }
+
+  private String selectUseDomainName() {
+
+    List<SymmetricKeyUseDomain> validForEncryption = new ArrayList<>();
+
+    for (SymmetricKeyUseDomain domain : this.cryptoConfig.getSymmetricKeyUseDomains()) {
+      if (domainIsValidForEncryption(domain)) {
+        validForEncryption.add(domain);
+      }
+    }
+
+    // No use domains available.
+    if (validForEncryption.isEmpty()) {
+      return null;
+    }
+
+    return validForEncryption.get(ThreadLocalRandom.current().nextInt(validForEncryption.size())).getName();
+  }
+
   @Override
   public byte[] encrypt(byte[] plainText) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
-
-    return new byte[0];
+    String useDomainName = selectUseDomainName();
+    return encryptInDomain(plainText, useDomainName);
   }
 
   @Override
