@@ -68,7 +68,8 @@ public class ICryptoImpl implements ICrypto {
     return apiKey;
   }
 
-  private synchronized ApiClient getClient() throws PeacemakrException {
+  // Why protected? For use with testing.
+  protected synchronized ApiClient getClient() throws PeacemakrException {
 
     if (this.apiClient != null) {
       return apiClient;

@@ -1,27 +1,74 @@
 package io.peacemakr.crypto;
 
 import io.peacemakr.crypto.exception.PeacemakrException;
+import io.peacemakr.crypto.exception.ServerException;
 import io.peacemakr.crypto.impl.crypto.ICryptoImpl;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
+import io.swagger.client.ApiClient;
+import io.swagger.client.ApiException;
+import io.swagger.client.api.OrgApi;
+import io.swagger.client.model.APIKey;
+import io.swagger.client.model.Organization;
 import org.junit.*;
+
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
 public class ICryptoTest {
 
+    private String testAPIKey = null;
+    private String testOrgId = null;
+
+    // For now, the tests expect to find peacemakr running on localhost:8080.
+    private static final String DEFAULT_PEACEMAKR_TEST_HOSTNAME = "http://localhost:8080";
+
+    private String getPeacemakrHostname() {
+        Map<String, String> map = System.getenv();
+
+        String hostname = map.get("PEACEMAKR_TEST_HOSTNAME");
+        if (hostname != null) {
+            return hostname;
+        }
+
+        return DEFAULT_PEACEMAKR_TEST_HOSTNAME;
+    }
+
     @Before
     public void setUp() throws Exception {
+
+        Map<String, String> map = System.getenv();
+        testAPIKey = map.get("PEACEMAKR_TEST_API_KEY");
+
+        if (testAPIKey == null) {
+
+            ApiClient apiClient = new ApiClient();
+            apiClient.setBasePath(getPeacemakrHostname() + "/api/v1");
+            apiClient.setApiKey("");
+
+            OrgApi orgApi = new OrgApi(apiClient);
+            APIKey apiKey;
+            try {
+                apiKey = orgApi.getTestOrganizationAPIKey();
+            } catch ( ApiException e) {
+                System.out.println(e);
+                throw new ServerException(e);
+            }
+            this.testAPIKey = apiKey.getKey();
+            this.testOrgId = apiKey.getOrgId();
+        }
+
+
     }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    @Ignore // Until crypto is implemented.
     @Test
     public void register() throws PeacemakrException {
 
-        // Violate abstration layer for access to internal state for more complete testing + asserting.
+        // Violate abstraction layer for access to internal state for more complete testing + asserting.
         ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(TestUtils.getApiKey(), "register test", TestUtils.getHostname(), new InMemoryPersister(), null);
         sdk.register();
 

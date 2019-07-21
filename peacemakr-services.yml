@@ -271,6 +271,48 @@ paths:
           description: Unable to process request
         '401':
           description: Not authenticated to perform request
+  /org/key/test:
+    get:
+      tags:
+        - Org
+      summary: Get an ephemeral test org api key
+      operationId: getTestOrganizationAPIKey
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns an apikey for a test org
+          schema:
+            $ref: '#/definitions/APIKey'
+        '400':
+          description: Unable to process request
+        '401':
+          description: Not authenticated to perform request
+        '500':
+          description: Unrecoverable internal server error
+  /org/key/sharedCloud:
+    get:
+      security:
+        - header: []
+      tags:
+        - Org
+      summary: Get an access key for the peacemakr shared cloud org (all cloud key derivers must use this)
+      operationId: getCloudOrganizationAPIKey
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Returns an apikey for a cloud org
+          schema:
+            $ref: '#/definitions/APIKey'
+        '400':
+          description: Unable to process request
+        '401':
+          description: Not authenticated to perform request
+        '403':
+          description: Not authorized to perform request
+        '500':
+          description: Unrecoverable internal server error
   /org/key:
     post:
       security:
@@ -904,6 +946,12 @@ paths:
             $ref: '#/definitions/KeyDerivationInstance'
         '400':
           description: Unable to process request
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized
+        '500':
+          description: Internal server error
   '/crypto/deriver/instance/{keyDerivationInstanceId}':
     delete:
       security:
@@ -977,14 +1025,14 @@ paths:
             $ref: '#/definitions/HeatbeatResponse'
         '400':
           description: Unable to process request
-  '/crypto/deriver/all-instances':
+  '/crypto/deriver/all-org-instances':
     get:
       security:
         - header: []
       tags:
         - KeyDerivationServiceRegistry
       summary: Get the all key derivers registerd to org
-      operationId: getAllKeyDerivationServiceInstances
+      operationId: getAllOrgKeyDerivationServiceInstances
       consumes:
         - application/json
       produces:
@@ -998,6 +1046,35 @@ paths:
               $ref: '#/definitions/KeyDerivationInstance'
         '400':
           description: Unable to process request.
+        '401':
+          description: Not Authenticated
+        '500':
+          description: Unrecoverable internal server error
+  '/crypto/deriver/all-shared-instances':
+    get:
+      security:
+        - header: []
+      tags:
+        - KeyDerivationServiceRegistry
+      summary: Get the all key derivers that the org has access to - including shared cloud instances
+      operationId: getAllSharedKeyDerivationServiceInstances
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Get all registered public key derivers - including shared cloud instances
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/KeyDerivationInstance'
+        '400':
+          description: Unable to process request.
+        '401':
+          description: Not Authenticated
+        '500':
+          description: Unrecoverable internal server error
 
 
 
@@ -1298,6 +1375,10 @@ definitions:
       baseUrl:
         type: string
         description: base URL from which this key deriver instance will respond to new key derivation job requests
+      isPublic:
+        type: boolean
+        default: false
+        description: if true then the key deriver is visible to every other organization
 
   HeatbeatResponse:
     type: object
