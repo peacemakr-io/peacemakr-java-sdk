@@ -7,6 +7,7 @@ import io.peacemakr.corecrypto.SymmetricCipher;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.peacemakr.crypto.exception.*;
+import io.peacemakr.crypto.impl.persister.InMemoryPersister;
 import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
 import io.swagger.client.api.ClientApi;
@@ -29,6 +30,9 @@ public class ICryptoImpl implements ICrypto {
   private static final String JAVA_SDK_VERSION = "0.0.1";
   private static final String PERSISTER_PRIV_KEY = "Priv";
   private static final String PERSISTER_PUB_KEY = "Pub";
+  private static final String PERSISTER_ASYM_TYPE = "AsymmetricKeyType";
+  private static final String PERSISTER_ASYM_CREATED_DATE_EPOCH = "AsymmetricKeyCreated";
+  private static final String PERSISTER_ASYM_BITLEN = "AsymmetricKeyCreated";
   private static final String PERSISTER_CLIENTID_KEY = "ClientId";
   private static final String PERSISTER_PREFERRED_KEYID = "PreferredKeyId";
   private static final String PERSISTER_APIKEY_KEY = "ApiKey";
@@ -129,7 +133,6 @@ public class ICryptoImpl implements ICrypto {
     this.org = myOrg;
 
     // Populate Crypto config,
-
     CryptoConfigApi cryptoConfigApi = new CryptoConfigApi(apiClient);
     CryptoConfig cryptoConfig = null;
     try {
@@ -167,61 +170,7 @@ public class ICryptoImpl implements ICrypto {
 
     doBootstrap();
 
-    AsymmetricCipher clientKeyType;
-    switch (this.cryptoConfig.getClientKeyType()) {
-
-      case "rsa":
-        switch (this.cryptoConfig.getClientKeyBitlength()) {
-          case 2048:
-            clientKeyType = AsymmetricCipher.RSA_2048;
-            break;
-          case 4096:
-          default:
-            clientKeyType = AsymmetricCipher.RSA_4096;
-            break;
-        }
-        break;
-      case "ec":
-        switch (this.cryptoConfig.getClientKeyBitlength()) {
-          case 256:
-            clientKeyType = AsymmetricCipher.ECDH_P256;
-            break;
-          case 384:
-            clientKeyType = AsymmetricCipher.ECDH_P384;
-            break;
-          case 521:
-          default:
-            clientKeyType = AsymmetricCipher.ECDH_P521;
-            break;
-        }
-        break;
-      default:
-        clientKeyType = AsymmetricCipher.ECDH_P521;
-    }
-
-    clientKeyType = UGLY_HACK_UNTIL_PEM_WORKS;
-    logger.error("DUE TO A UGLY HACK, you get a key type of " + UGLY_HACK_UNTIL_PEM_WORKS);
-
-
-    SymmetricCipher thisIsNeverUsed = SymmetricCipher.CHACHA20_POLY1305;
-    AsymmetricKey clientKey = AsymmetricKey.fromPRNG(clientKeyType, thisIsNeverUsed);
-    String publicKeyPEM = clientKey.getPubPemStr();
-    String privateKeyPEM = clientKey.getPrivPemStr();
-
-    this.persister.save(PERSISTER_PRIV_KEY, privateKeyPEM);
-    this.persister.save(PERSISTER_PUB_KEY, publicKeyPEM);
-
-    PublicKey publicKey = new PublicKey();
-    long seconds = System.currentTimeMillis() / 1000;
-    if (seconds > Integer.MAX_VALUE) {
-      throw new UnrecoverableClockSkewDetectedException("Failed to detect a valid time for local asymmetric key creation time," +
-              " time expected to be less than " + Integer.MAX_VALUE);
-    }
-    publicKey.setCreationTime((int)seconds);
-    publicKey.setEncoding("pem");
-    publicKey.setId("");
-    publicKey.setKey(publicKeyPEM);
-    publicKey.setKeyType(cryptoConfig.getClientKeyType());
+    PublicKey publicKey = genNewAsymmetricKeypair(this.persister);
 
     Client newClient = new Client();
     newClient.setId("");
@@ -259,15 +208,135 @@ public class ICryptoImpl implements ICrypto {
     }
 
     this.persister.save(PERSISTER_CLIENTID_KEY, this.client.getId());
-    this.persister.save( PERSISTER_PREFERRED_KEYID, this.client.getPublicKeys().get(0).getId());
+    this.persister.save(PERSISTER_PREFERRED_KEYID, this.client.getPublicKeys().get(0).getId());
+  }
+
+  private AsymmetricCipher getAsymmetricCipher(String asymmetricCipher) {
+    AsymmetricCipher clientKeyType;
+    switch (asymmetricCipher) {
+
+      case "rsa":
+        switch (this.cryptoConfig.getClientKeyBitlength()) {
+          case 2048:
+            clientKeyType = AsymmetricCipher.RSA_2048;
+            break;
+          case 4096:
+          default:
+            clientKeyType = AsymmetricCipher.RSA_4096;
+            break;
+        }
+        break;
+      case "ec":
+        switch (this.cryptoConfig.getClientKeyBitlength()) {
+          case 256:
+            clientKeyType = AsymmetricCipher.ECDH_P256;
+            break;
+          case 384:
+            clientKeyType = AsymmetricCipher.ECDH_P384;
+            break;
+          case 521:
+          default:
+            clientKeyType = AsymmetricCipher.ECDH_P521;
+            break;
+        }
+        break;
+      default:
+        clientKeyType = AsymmetricCipher.ECDH_P521;
+    }
+    return clientKeyType;
   }
 
   private void decryptAndSave(List<EncryptedSymmetricKey> allKeys) {
     // TODO: yea, do this.
   }
 
-  private void updateLocalCryptoConfig(CryptoConfig newConfig) {
-    // TODO: yea, do this too.
+  private void updateLocalCryptoConfig(CryptoConfig newConfig) throws PeacemakrException {
+
+    String curAsymmetricKeyType = persister.load(PERSISTER_ASYM_TYPE);
+    if (!newConfig.getClientKeyType().equals(curAsymmetricKeyType)) {
+      logger.info("Detected a new asymmetric client key type of " + newConfig.getClientKeyType() + " instead of " + curAsymmetricKeyType);
+      this.cryptoConfig = newConfig;
+      genAndRegisterNewPreferredClientKey();
+      return;
+    }
+
+    String curAsymmetricKeyCreationTime = persister.load(PERSISTER_ASYM_CREATED_DATE_EPOCH);
+    long asymmetricKeyCreationTime = Long.parseLong(curAsymmetricKeyCreationTime);
+    if (newConfig.getClientKeyTTL() + asymmetricKeyCreationTime > (System.currentTimeMillis() / 1000)) {
+      logger.info("Detected an expired local asymmetric client key");
+      this.cryptoConfig = newConfig;
+      genAndRegisterNewPreferredClientKey();
+      return;
+    }
+
+    String curAsymmetricKeyBitLenS =  persister.load(PERSISTER_ASYM_BITLEN);
+    int asymmetricKeyBitLen = Integer.parseInt(curAsymmetricKeyBitLenS);
+    if (asymmetricKeyBitLen != newConfig.getClientKeyBitlength()) {
+      logger.info("Detected an updated local asymmetric client key bitlength requirement of " + newConfig.getClientKeyBitlength() + " insteads of the previous " + curAsymmetricKeyBitLenS);
+      this.cryptoConfig = newConfig;
+      genAndRegisterNewPreferredClientKey();
+      return;
+    }
+
+    // Otherwise, it's a passive update, just update it.
+    this.cryptoConfig = newConfig;
+  }
+
+  private void saveNewAsymmetricKeyPair(Persister from, Persister to) {
+    to.save(PERSISTER_PRIV_KEY, from.load(PERSISTER_PRIV_KEY));
+    to.save(PERSISTER_PUB_KEY, from.load(PERSISTER_PUB_KEY));
+    to.save(PERSISTER_ASYM_TYPE, from.load(PERSISTER_ASYM_TYPE));
+    to.save(PERSISTER_ASYM_CREATED_DATE_EPOCH, from.load(PERSISTER_ASYM_CREATED_DATE_EPOCH));
+    to.save(PERSISTER_ASYM_BITLEN, from.load(PERSISTER_ASYM_BITLEN));
+  }
+
+  private PublicKey genNewAsymmetricKeypair(Persister p) throws UnrecoverableClockSkewDetectedException {
+    AsymmetricCipher clientKeyType  = getAsymmetricCipher(this.cryptoConfig.getClientKeyType());
+    SymmetricCipher thisIsNeverUsed = SymmetricCipher.CHACHA20_POLY1305;
+
+    AsymmetricKey clientKey = AsymmetricKey.fromPRNG(clientKeyType, thisIsNeverUsed);
+    String publicKeyPEM = clientKey.getPubPemStr();
+    String privateKeyPEM = clientKey.getPrivPemStr();
+
+    p.save(PERSISTER_PRIV_KEY, privateKeyPEM);
+    p.save(PERSISTER_PUB_KEY, publicKeyPEM);
+    p.save(PERSISTER_ASYM_TYPE, this.cryptoConfig.getClientKeyType());
+    p.save(PERSISTER_ASYM_CREATED_DATE_EPOCH, "" + (System.currentTimeMillis() / 1000));
+    p.save(PERSISTER_ASYM_BITLEN, "" + this.cryptoConfig.getClientKeyBitlength());
+
+    PublicKey publicKey = new PublicKey();
+    long seconds = System.currentTimeMillis() / 1000;
+    if (seconds > Integer.MAX_VALUE) {
+      throw new UnrecoverableClockSkewDetectedException("Failed to detect a valid time for local asymmetric key creation time," +
+              " time expected to be less than " + Integer.MAX_VALUE);
+    }
+    publicKey.setCreationTime((int)seconds);
+    publicKey.setEncoding("pem");
+    publicKey.setId("");
+    publicKey.setKey(publicKeyPEM);
+    publicKey.setKeyType(cryptoConfig.getClientKeyType());
+
+    return publicKey;
+  }
+
+  private synchronized void genAndRegisterNewPreferredClientKey() throws PeacemakrException {
+    logger.info("Generating a new preferred client key");
+    InMemoryPersister tempInMemoryPerister=  new InMemoryPersister();
+    PublicKey publicKey = genNewAsymmetricKeypair(tempInMemoryPerister);
+
+    logger.info("Registering the new public key");
+    ClientApi clientApi = new ClientApi(getClient());
+    try {
+      publicKey = clientApi.addClientPublicKey(this.client.getId(), publicKey);
+    } catch (ApiException e) {
+      logger.error("Failed to register a new public key", e);
+      throw new ServerException(e);
+    }
+    logger.info("Successfully registered new public key as client prefered key");
+    saveNewAsymmetricKeyPair(tempInMemoryPerister, this.persister);
+    this.persister.save(PERSISTER_PREFERRED_KEYID, publicKey.getId());
+    logger.info("Successfully saved new public key as client preferred key");
+
   }
 
   @Override
