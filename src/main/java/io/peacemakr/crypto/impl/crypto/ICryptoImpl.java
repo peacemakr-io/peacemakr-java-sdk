@@ -1,5 +1,6 @@
 package io.peacemakr.crypto.impl.crypto;
 
+import com.google.gson.Gson;
 import io.peacemakr.corecrypto.AsymmetricCipher;
 import io.peacemakr.corecrypto.AsymmetricKey;
 import io.peacemakr.corecrypto.Crypto;
@@ -7,6 +8,7 @@ import io.peacemakr.corecrypto.SymmetricCipher;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.peacemakr.crypto.exception.*;
+import io.peacemakr.crypto.impl.crypto.models.CiphertextAAD;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
 import io.swagger.client.ApiClient;
 import io.swagger.client.ApiException;
@@ -18,9 +20,11 @@ import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.*;
 import org.apache.log4j.Logger;
 
+import javax.crypto.Cipher;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -246,8 +250,57 @@ public class ICryptoImpl implements ICrypto {
     return clientKeyType;
   }
 
-  private void decryptAndSave(List<EncryptedSymmetricKey> allKeys) {
-    // TODO: yea, do this.
+  private CiphertextAAD parseCiphertextAAD(String aad) {
+    Gson gson = new Gson();
+    return gson.fromJson(aad, CiphertextAAD.class);
+  }
+
+  private AsymmetricKey getOrDownloadPublicKey(String keyId) throws PeacemakrException {
+
+    if (persister.exists(keyId)) {
+      return AsymmetricKey.fromPubPem(UGLY_HACK_UNTIL_PEM_WORKS, DEFAULT_SYMMETRIC_CIPHER, persister.load(keyId));
+    }
+
+    KeyServiceApi keyServiceApi = new KeyServiceApi(getClient());
+    PublicKey publicKey;
+    try {
+      publicKey = keyServiceApi.getPublicKey(keyId);
+    } catch (ApiException e) {
+      logger.error("Failed to get public key keyId " + keyId, e);
+      throw new ServerException(e);
+    }
+
+    persister.save(keyId, publicKey.getKey());
+    return AsymmetricKey.fromPubPem(UGLY_HACK_UNTIL_PEM_WORKS, DEFAULT_SYMMETRIC_CIPHER, publicKey.getKey());
+
+  }
+
+  private void decryptAndSave(List<EncryptedSymmetricKey> allKeys) throws PeacemakrException {
+    for (EncryptedSymmetricKey key : allKeys) {
+
+      if (key == null) {
+        continue;
+      }
+
+      String rawCiphertextStr = key.getPackagedCiphertext();
+
+      String aadStr = new String(Crypto.getCiphertextAAD(rawCiphertextStr.getBytes(StandardCharsets.UTF_8)));
+      CiphertextAAD aad = parseCiphertextAAD(aadStr);
+
+      AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
+
+      byte[] plaintext = Crypto.decryptAsymmetric(loadedPrivatePreferredKey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
+
+      int keyLen = key.getKeyLength();
+      int offset = 0;
+      for (String keyId : key.getKeyIds()) {
+        byte[] currentKeyPlaintext = Arrays.copyOfRange(plaintext, offset, offset + keyLen);
+        persister.save(keyId, new String(currentKeyPlaintext));
+        offset = offset + keyLen;
+        logger.debug("Decrypted and saved keyId " + keyId);
+      }
+
+    }
   }
 
   private void updateLocalCryptoConfig(CryptoConfig newConfig) throws PeacemakrException {
@@ -348,10 +401,12 @@ public class ICryptoImpl implements ICrypto {
       CryptoConfig newConfig = cryptoConfigApi.getCryptoConfig(this.cryptoConfig.getId());
       if (newConfig.equals(this.cryptoConfig)) {
         // Do nothing.
+        logger.info("No changes to crypto configs.");
       } else {
         updateLocalCryptoConfig(newConfig);
       }
     } catch ( ApiException e) {
+      logger.error("failed to pull new crypto config from server during sync due to", e);
       throw new ServerException(e);
     }
 
@@ -364,8 +419,10 @@ public class ICryptoImpl implements ICrypto {
     try {
       // The response from the server will populate our clientId field.
       List<EncryptedSymmetricKey> allKeys = keyServiceApi.getAllEncryptedKeys(this.client.getPreferredPublicKeyId(), requiredKeyIds);
+      logger.info("Downloaded " + allKeys.size() + " encrypted symmetric keys.");
       decryptAndSave(allKeys);
     } catch (ApiException e) {
+      logger.error("Failed to download all keys", e);
       throw new ServerException(e);
     }
   }
