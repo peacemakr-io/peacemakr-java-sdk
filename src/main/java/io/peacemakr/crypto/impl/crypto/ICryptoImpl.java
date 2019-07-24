@@ -1,10 +1,7 @@
 package io.peacemakr.crypto.impl.crypto;
 
 import com.google.gson.Gson;
-import io.peacemakr.corecrypto.AsymmetricCipher;
-import io.peacemakr.corecrypto.AsymmetricKey;
-import io.peacemakr.corecrypto.Crypto;
-import io.peacemakr.corecrypto.SymmetricCipher;
+import io.peacemakr.corecrypto.*;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.Persister;
 import io.peacemakr.crypto.exception.*;
@@ -20,7 +17,6 @@ import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.*;
 import org.apache.log4j.Logger;
 
-import javax.crypto.Cipher;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -41,8 +37,6 @@ public class ICryptoImpl implements ICrypto {
   private static final String PERSISTER_PREFERRED_KEYID = "PreferredKeyId";
   private static final String PERSISTER_APIKEY_KEY = "ApiKey";
 
-  private static final AsymmetricCipher UGLY_HACK_UNTIL_PEM_WORKS = AsymmetricCipher.RSA_4096;
-
 
   private static final String Chacha20Poly1305 = "Peacemakr.Symmetric.CHACHA20_POLY1305";
   private static final String Aes128gcm        = "Peacemakr.Symmetric.AES_128_GCM";
@@ -54,7 +48,7 @@ public class ICryptoImpl implements ICrypto {
   private static final String Sha256 = "Peacemakr.Digest.SHA_256";
   private static final String Sha384 = "Peacemakr.Digest.SHA_384";
   private static final String Sha512 = "Peacemakr.Digest.SHA_512";
-  private static final Crypto.MessageDigest DEFAULT_MESSAGE_DIGEST = Crypto.MessageDigest.SHA_256;
+  private static final MessageDigest DEFAULT_MESSAGE_DIGEST = MessageDigest.SHA_256;
 
   private final String apiKey;
   private final String clientName;
@@ -263,7 +257,7 @@ public class ICryptoImpl implements ICrypto {
   private AsymmetricKey getOrDownloadPublicKey(String keyId) throws PeacemakrException {
 
     if (persister.exists(keyId)) {
-      return AsymmetricKey.fromPubPem(UGLY_HACK_UNTIL_PEM_WORKS, DEFAULT_SYMMETRIC_CIPHER, persister.load(keyId));
+      return AsymmetricKey.fromPubPem(DEFAULT_SYMMETRIC_CIPHER, persister.load(keyId));
     }
 
     KeyServiceApi keyServiceApi = new KeyServiceApi(getClient());
@@ -276,7 +270,7 @@ public class ICryptoImpl implements ICrypto {
     }
 
     persister.save(keyId, publicKey.getKey());
-    return AsymmetricKey.fromPubPem(UGLY_HACK_UNTIL_PEM_WORKS, DEFAULT_SYMMETRIC_CIPHER, publicKey.getKey());
+    return AsymmetricKey.fromPubPem(DEFAULT_SYMMETRIC_CIPHER, publicKey.getKey());
 
   }
 
@@ -552,17 +546,17 @@ public class ICryptoImpl implements ICrypto {
     }
   }
 
-  private Crypto.MessageDigest getDigestAlg(String digestAlgorithm) {
+  private MessageDigest getDigestAlg(String digestAlgorithm) {
 
     switch (digestAlgorithm) {
       case Sha224:
-        return Crypto.MessageDigest.SHA_224;
+        return MessageDigest.SHA_224;
       case Sha256:
-        return Crypto.MessageDigest.SHA_256;
+        return MessageDigest.SHA_256;
       case Sha384:
-        return Crypto.MessageDigest.SHA_384;
+        return MessageDigest.SHA_384;
       case Sha512:
-        return Crypto.MessageDigest.SHA_512;
+        return MessageDigest.SHA_512;
       default:
         logger.warn("Unknown digest alg " + digestAlgorithm + ", so using the default of " + DEFAULT_MESSAGE_DIGEST);
         return DEFAULT_MESSAGE_DIGEST;
@@ -584,7 +578,7 @@ public class ICryptoImpl implements ICrypto {
 
     // Create it.
     String privatePem = this.persister.load(PERSISTER_PRIV_KEY);
-    this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(UGLY_HACK_UNTIL_PEM_WORKS, SymmetricCipher.CHACHA20_POLY1305, privatePem);
+    this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(SymmetricCipher.CHACHA20_POLY1305, privatePem);
 
     return this.loadedPrivatePreferredKey;
   }
@@ -607,7 +601,7 @@ public class ICryptoImpl implements ICrypto {
 
     SymmetricCipher symmetricCipher = getSymmetricCipher(useDomainForEncrytpion.getSymmetricKeyEncryptionAlg());
     AsymmetricKey signingKey = getSigningKey(useDomainForEncrytpion);
-    Crypto.MessageDigest digest = getDigestAlg(useDomainForEncrytpion.getDigestAlgorithm());
+    MessageDigest digest = getDigestAlg(useDomainForEncrytpion.getDigestAlgorithm());
 
     byte[] encryptedBlob = Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, new byte[]{}, digest);
     return encryptedBlob;
