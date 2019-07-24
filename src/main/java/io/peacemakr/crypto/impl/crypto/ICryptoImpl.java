@@ -101,6 +101,11 @@ public class ICryptoImpl implements ICrypto {
     apiClient.setBasePath(peacemakrHostname + "/api/v1");
     apiClient.setApiKey(getApiKey());
 
+    // 30 second timeouts.
+    apiClient.setConnectTimeout(30*1000);
+    apiClient.setReadTimeout(30*1000);
+    apiClient.setWriteTimeout(30*1000);
+
     // Save this for later.
     persister.save(PERSISTER_APIKEY_KEY, apiKey);
 
@@ -283,11 +288,21 @@ public class ICryptoImpl implements ICrypto {
       }
 
       String rawCiphertextStr = key.getPackagedCiphertext();
+      if (rawCiphertextStr == null) {
+        logger.error("Failed to get raw ciphertext str from EncryptedSymmetricKey " + key);
+        continue;
+      }
 
-      String aadStr = new String(Crypto.getCiphertextAAD(rawCiphertextStr.getBytes(StandardCharsets.UTF_8)));
+      byte[] extractedAad = Crypto.getCiphertextAAD(rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
+      if (extractedAad == null) {
+        throw new CoreCryptoException("Failed to extract aad from the ciphertext: " + rawCiphertextStr);
+      }
+      String aadStr = new String(extractedAad);
       CiphertextAAD aad = parseCiphertextAAD(aadStr);
 
       AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
+
+      // TODO: handle ECDH keys here too.
 
       byte[] plaintext = Crypto.decryptAsymmetric(loadedPrivatePreferredKey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
 
@@ -473,7 +488,7 @@ public class ICryptoImpl implements ICrypto {
       List<SymmetricKeyUseDomain> useDomains = this.cryptoConfig.getSymmetricKeyUseDomains();
       List<SymmetricKeyUseDomain> validDomainWithThisName = new ArrayList<>();
 
-      SymmetricKeyUseDomain selectedDomain = null;
+      logger.debug("Looking for the domain " + useDomain + " in a total of " + useDomains.size() + " use domains.");
 
       for (SymmetricKeyUseDomain domain : useDomains) {
         if (!domain.getName().equals(useDomain)) {
@@ -482,7 +497,7 @@ public class ICryptoImpl implements ICrypto {
         if (!domainIsValidForEncryption(domain)) {
           continue;
         }
-        if (!domain.getEncryptionKeyIds().isEmpty()) {
+        if (domain.getEncryptionKeyIds().isEmpty()) {
           continue;
         }
         validDomainWithThisName.add(domain);

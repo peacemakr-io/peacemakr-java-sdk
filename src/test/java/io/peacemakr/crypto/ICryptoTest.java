@@ -69,7 +69,7 @@ public class ICryptoTest {
     public void register() throws PeacemakrException {
 
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
-        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(TestUtils.getApiKey(), "register test", TestUtils.getHostname(), new InMemoryPersister(), null);
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk.register();
 
         String debug = sdk.getDebugInfo();
@@ -81,7 +81,7 @@ public class ICryptoTest {
     public void sync() throws PeacemakrException {
 
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
-        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(TestUtils.getApiKey(), "register test", TestUtils.getHostname(), new InMemoryPersister(), null);
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk.register();
 
         String debug = sdk.getDebugInfo();
@@ -92,7 +92,17 @@ public class ICryptoTest {
     }
 
     @Test
-    public void encrypt() {
+    public void encrypt() throws PeacemakrException {
+
+        // Violate abstraction layer for access to internal state for more complete testing + asserting.
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
+        sdk.register();
+
+        String debug = sdk.getDebugInfo();
+        Assert.assertNotEquals("Peacemakr Java Sdk DebugInfo - orgId=UnknownOrgId clientId=UnkonwnClientId preferedKeyId=UnknownPreferedKeyId", debug);
+
+        sdk.encrypt("This is a test.");
+
     }
 
     @Test
