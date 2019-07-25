@@ -101,8 +101,8 @@ public class ICryptoTest {
         String debug = sdk.getDebugInfo();
         Assert.assertNotEquals("Peacemakr Java Sdk DebugInfo - orgId=UnknownOrgId clientId=UnkonwnClientId preferedKeyId=UnknownPreferedKeyId", debug);
 
-        sdk.encrypt("This is a test.");
-
+        String encrypted = sdk.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted);
     }
 
     @Test

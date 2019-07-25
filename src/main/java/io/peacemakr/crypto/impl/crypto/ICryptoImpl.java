@@ -528,7 +528,7 @@ public class ICryptoImpl implements ICrypto {
     }
 
     String key = this.persister.load(keyId);
-    return Base64.getDecoder().decode(key.getBytes("UTF-8"));
+    return key.getBytes("UTF-8");
   }
 
   private SymmetricCipher getSymmetricCipher(String symmetricKeyEncryptionAlg) {
