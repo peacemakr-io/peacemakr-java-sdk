@@ -446,7 +446,9 @@ public class ICryptoImpl implements ICrypto {
   }
 
   private boolean domainIsValidForEncryption(SymmetricKeyUseDomain domain) {
-    return domain.getCreationTime() + domain.getSymmetricKeyEncryptionUseTTL() < (System.currentTimeMillis() / 1000);
+    long nowInSeconds = (System.currentTimeMillis() / 1000);
+    return (long) domain.getCreationTime() + (long)domain.getSymmetricKeyEncryptionUseTTL() > nowInSeconds &&
+            (long) domain.getCreationTime() + (long)domain.getSymmetricKeyInceptionTTL() <= nowInSeconds;
   }
 
   private String selectUseDomainName() {

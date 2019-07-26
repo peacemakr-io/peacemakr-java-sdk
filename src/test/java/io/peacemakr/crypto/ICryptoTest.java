@@ -73,7 +73,7 @@ public class ICryptoTest {
     public void register() throws PeacemakrException {
 
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
-        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - register", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk.register();
 
         String debug = sdk.getDebugInfo();
@@ -85,7 +85,7 @@ public class ICryptoTest {
     public void sync() throws PeacemakrException {
 
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
-        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - sync", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk.register();
 
         String debug = sdk.getDebugInfo();
@@ -96,9 +96,9 @@ public class ICryptoTest {
     }
 
     @Test
-    public void encrypt() throws PeacemakrException {
+    public void encryptDecryptWithOneClient() throws PeacemakrException {
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
-        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
+        ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithOneClient", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk.register();
 
         String debug = sdk.getDebugInfo();
@@ -122,14 +122,14 @@ public class ICryptoTest {
         Assert.assertNotEquals(encrypted2, encrypted4);
         Assert.assertNotEquals(encrypted3, encrypted4);
 
-        String encrypted5 = sdk.encryptInDomain("This is a test.", "domain-");
+        String encrypted5 = sdk.encryptInDomain("This is a test.", "domain-0");
         Assert.assertNotEquals("This is a test.", encrypted5);
         Assert.assertNotEquals(encrypted1, encrypted5);
         Assert.assertNotEquals(encrypted2, encrypted5);
         Assert.assertNotEquals(encrypted3, encrypted5);
         Assert.assertNotEquals(encrypted4, encrypted5);
 
-        String encrypted6 = sdk.encryptInDomain("This is a test.", "domain-");
+        String encrypted6 = sdk.encryptInDomain("This is a test.", "domain-0");
         Assert.assertNotEquals("This is a test.", encrypted6);
         Assert.assertNotEquals(encrypted1, encrypted6);
         Assert.assertNotEquals(encrypted2, encrypted6);
@@ -137,28 +137,144 @@ public class ICryptoTest {
         Assert.assertNotEquals(encrypted4, encrypted6);
         Assert.assertNotEquals(encrypted5, encrypted6);
 
+        String encrypted7 = sdk.encryptInDomain("This is a test.", "domain-1");
+        Assert.assertNotEquals("This is a test.", encrypted6);
+        Assert.assertNotEquals(encrypted1, encrypted7);
+        Assert.assertNotEquals(encrypted2, encrypted7);
+        Assert.assertNotEquals(encrypted3, encrypted7);
+        Assert.assertNotEquals(encrypted4, encrypted7);
+        Assert.assertNotEquals(encrypted5, encrypted7);
+        Assert.assertNotEquals(encrypted6, encrypted7);
+
         Assert.assertEquals(sdk.decrypt(encrypted1), "This is a test.");
         Assert.assertEquals(sdk.decrypt(encrypted2), "This is a test.");
         Assert.assertEquals(sdk.decrypt(encrypted3), "This is a test.");
         Assert.assertEquals(sdk.decrypt(encrypted4), "This is a test.");
         Assert.assertEquals(sdk.decrypt(encrypted5), "This is a test.");
         Assert.assertEquals(sdk.decrypt(encrypted6), "This is a test.");
+        Assert.assertEquals(sdk.decrypt(encrypted7), "This is a test.");
     }
 
     @Test
-    public void encryptInDomain() {
-    }
+    public void encryptDecryptWithThreeClients() throws PeacemakrException {
 
-    @Test
-    public void encryptInDomain1() {
-    }
+        // Violate abstraction layer for access to internal state for more complete testing + asserting.
+        ICryptoImpl sdk1 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithTwoClients 1", getPeacemakrHostname(), new InMemoryPersister(), null);
+        sdk1.register();
 
-    @Test
-    public void decrypt() {
-    }
+        String encrypted1 = sdk1.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted1);
 
-    @Test
-    public void decrypt1() {
+        String encrypted2 = sdk1.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted2);
+        Assert.assertNotEquals(encrypted1, encrypted2);
+
+        String encrypted3 = sdk1.encryptInDomain("This is a test.", "default");
+        Assert.assertNotEquals("This is a test.", encrypted3);
+        Assert.assertNotEquals(encrypted1, encrypted3);
+        Assert.assertNotEquals(encrypted2, encrypted3);
+
+        String encrypted4 = sdk1.encryptInDomain("This is a test.", "default");
+        Assert.assertNotEquals("This is a test.", encrypted4);
+        Assert.assertNotEquals(encrypted1, encrypted4);
+        Assert.assertNotEquals(encrypted2, encrypted4);
+        Assert.assertNotEquals(encrypted3, encrypted4);
+
+        String encrypted5 = sdk1.encryptInDomain("This is a test.", "domain-0");
+        Assert.assertNotEquals("This is a test.", encrypted5);
+        Assert.assertNotEquals(encrypted1, encrypted5);
+        Assert.assertNotEquals(encrypted2, encrypted5);
+        Assert.assertNotEquals(encrypted3, encrypted5);
+        Assert.assertNotEquals(encrypted4, encrypted5);
+
+        String encrypted6 = sdk1.encryptInDomain("This is a test.", "domain-0");
+        Assert.assertNotEquals("This is a test.", encrypted6);
+        Assert.assertNotEquals(encrypted1, encrypted6);
+        Assert.assertNotEquals(encrypted2, encrypted6);
+        Assert.assertNotEquals(encrypted3, encrypted6);
+        Assert.assertNotEquals(encrypted4, encrypted6);
+        Assert.assertNotEquals(encrypted5, encrypted6);
+
+        String encrypted7 = sdk1.encryptInDomain("This is a test.", "domain-1");
+        Assert.assertNotEquals("This is a test.", encrypted6);
+        Assert.assertNotEquals(encrypted1, encrypted7);
+        Assert.assertNotEquals(encrypted2, encrypted7);
+        Assert.assertNotEquals(encrypted3, encrypted7);
+        Assert.assertNotEquals(encrypted4, encrypted7);
+        Assert.assertNotEquals(encrypted5, encrypted7);
+        Assert.assertNotEquals(encrypted6, encrypted7);
+
+        ICryptoImpl sdk2 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithTwoClients 2", getPeacemakrHostname(), new InMemoryPersister(), null);
+        sdk2.register();
+        Assert.assertEquals(sdk2.decrypt(encrypted1), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted2), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted3), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted4), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted5), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted6), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted7), "This is a test.");
+
+        encrypted1 = sdk2.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted1);
+        encrypted2 = sdk2.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted2);
+        Assert.assertNotEquals(encrypted1, encrypted2);
+        encrypted3 = sdk2.encryptInDomain("This is a test.", "default");
+        Assert.assertNotEquals("This is a test.", encrypted3);
+        Assert.assertNotEquals(encrypted1, encrypted3);
+        Assert.assertNotEquals(encrypted2, encrypted3);
+        encrypted4 = sdk2.encryptInDomain("This is a test.", "default");
+        Assert.assertNotEquals("This is a test.", encrypted4);
+        Assert.assertNotEquals(encrypted1, encrypted4);
+        Assert.assertNotEquals(encrypted2, encrypted4);
+        Assert.assertNotEquals(encrypted3, encrypted4);
+        encrypted5 = sdk2.encryptInDomain("This is a test.", "domain-0");
+        Assert.assertNotEquals("This is a test.", encrypted5);
+        Assert.assertNotEquals(encrypted1, encrypted5);
+        Assert.assertNotEquals(encrypted2, encrypted5);
+        Assert.assertNotEquals(encrypted3, encrypted5);
+        Assert.assertNotEquals(encrypted4, encrypted5);
+        encrypted6 = sdk2.encryptInDomain("This is a test.", "domain-0");
+        Assert.assertNotEquals("This is a test.", encrypted6);
+        Assert.assertNotEquals(encrypted1, encrypted6);
+        Assert.assertNotEquals(encrypted2, encrypted6);
+        Assert.assertNotEquals(encrypted3, encrypted6);
+        Assert.assertNotEquals(encrypted4, encrypted6);
+        Assert.assertNotEquals(encrypted5, encrypted6);
+        encrypted7 = sdk2.encryptInDomain("This is a test.", "domain-1");
+        Assert.assertNotEquals("This is a test.", encrypted6);
+        Assert.assertNotEquals(encrypted1, encrypted7);
+        Assert.assertNotEquals(encrypted2, encrypted7);
+        Assert.assertNotEquals(encrypted3, encrypted7);
+        Assert.assertNotEquals(encrypted4, encrypted7);
+        Assert.assertNotEquals(encrypted5, encrypted7);
+        Assert.assertNotEquals(encrypted6, encrypted7);
+
+        Assert.assertEquals(sdk1.decrypt(encrypted1), "This is a test.");
+        Assert.assertEquals(sdk1.decrypt(encrypted2), "This is a test.");
+        Assert.assertEquals(sdk1.decrypt(encrypted3), "This is a test.");
+        Assert.assertEquals(sdk1.decrypt(encrypted4), "This is a test.");
+        Assert.assertEquals(sdk1.decrypt(encrypted5), "This is a test.");
+        Assert.assertEquals(sdk1.decrypt(encrypted6), "This is a test.");
+        Assert.assertEquals(sdk1.decrypt(encrypted7), "This is a test.");
+
+        Assert.assertEquals(sdk2.decrypt(encrypted1), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted2), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted3), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted4), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted5), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted6), "This is a test.");
+        Assert.assertEquals(sdk2.decrypt(encrypted7), "This is a test.");
+
+        ICryptoImpl sdk3 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithTwoClients 3", getPeacemakrHostname(), new InMemoryPersister(), null);
+        sdk3.register();
+        Assert.assertEquals(sdk3.decrypt(encrypted1), "This is a test.");
+        Assert.assertEquals(sdk3.decrypt(encrypted2), "This is a test.");
+        Assert.assertEquals(sdk3.decrypt(encrypted3), "This is a test.");
+        Assert.assertEquals(sdk3.decrypt(encrypted4), "This is a test.");
+        Assert.assertEquals(sdk3.decrypt(encrypted5), "This is a test.");
+        Assert.assertEquals(sdk3.decrypt(encrypted6), "This is a test.");
+        Assert.assertEquals(sdk3.decrypt(encrypted7), "This is a test.");
     }
 
     @Test
