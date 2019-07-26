@@ -306,7 +306,7 @@ public class ICryptoImpl implements ICrypto {
       int offset = 0;
       for (String keyId : key.getKeyIds()) {
         byte[] currentKeyPlaintext = Arrays.copyOfRange(plaintext, offset, offset + keyLen);
-        persister.save(keyId, new String(currentKeyPlaintext));
+        persister.save(keyId, Base64.getEncoder().encodeToString(currentKeyPlaintext));
         offset = offset + keyLen;
         logger.debug("Decrypted and saved keyId " + keyId);
       }
@@ -441,7 +441,8 @@ public class ICryptoImpl implements ICrypto {
   @Override
   public String encrypt(String plainText) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
-    return new String(encrypt(plainText.getBytes( StandardCharsets.UTF_8)));
+    byte[] encrypted = encrypt(plainText.getBytes( StandardCharsets.UTF_8));
+    return new String(encrypted);
   }
 
   private boolean domainIsValidForEncryption(SymmetricKeyUseDomain domain) {
@@ -500,7 +501,7 @@ public class ICryptoImpl implements ICrypto {
       }
 
       if (validDomainWithThisName.isEmpty()) {
-        throw new NoValidUseDomainsForEncryptionOperation();
+        throw new NoValidUseDomainsForEncryptionOperation("No valid use domain for encryption found, with the name " + useDomain);
       }
 
       return validDomainWithThisName.get(ThreadLocalRandom.current().nextInt(validDomainWithThisName.size()));
@@ -517,7 +518,7 @@ public class ICryptoImpl implements ICrypto {
 
     if (this.persister.exists(keyId)) {
       String key = this.persister.load(keyId);
-      return key.getBytes("UTF-8");
+      return Base64.getDecoder().decode(key);
     }
 
     List<String> requiredKeys = new ArrayList<>();
@@ -529,7 +530,7 @@ public class ICryptoImpl implements ICrypto {
     }
 
     String key = this.persister.load(keyId);
-    return key.getBytes("UTF-8");
+    return Base64.getDecoder().decode(key);
   }
 
   private SymmetricCipher getSymmetricCipher(String symmetricKeyEncryptionAlg) {

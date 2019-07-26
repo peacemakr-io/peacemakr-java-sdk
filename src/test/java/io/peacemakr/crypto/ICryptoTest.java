@@ -9,6 +9,8 @@ import io.swagger.client.ApiException;
 import io.swagger.client.api.OrgApi;
 import io.swagger.client.model.APIKey;
 import io.swagger.client.model.Organization;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.junit.*;
 
 import java.util.Map;
@@ -36,6 +38,8 @@ public class ICryptoTest {
 
     @Before
     public void setUp() throws Exception {
+
+        LogManager.getRootLogger().setLevel(Level.ALL);
 
         Map<String, String> map = System.getenv();
         testAPIKey = map.get("PEACEMAKR_TEST_API_KEY");
@@ -100,15 +104,45 @@ public class ICryptoTest {
         String debug = sdk.getDebugInfo();
         Assert.assertNotEquals("Peacemakr Java Sdk DebugInfo - orgId=UnknownOrgId clientId=UnkonwnClientId preferedKeyId=UnknownPreferedKeyId", debug);
 
-        String encrypted = sdk.encrypt("This is a test.");
-        Assert.assertNotEquals("This is a test.", encrypted);
+        String encrypted1 = sdk.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted1);
 
-        String decrypted = sdk.decrypt(encrypted);
-        Assert.assertEquals("This is a test.", decrypted);
-    }
+        String encrypted2 = sdk.encrypt("This is a test.");
+        Assert.assertNotEquals("This is a test.", encrypted2);
+        Assert.assertNotEquals(encrypted1, encrypted2);
 
-    @Test
-    public void encrypt1() {
+        String encrypted3 = sdk.encryptInDomain("This is a test.", "default");
+        Assert.assertNotEquals("This is a test.", encrypted3);
+        Assert.assertNotEquals(encrypted1, encrypted3);
+        Assert.assertNotEquals(encrypted2, encrypted3);
+
+        String encrypted4 = sdk.encryptInDomain("This is a test.", "default");
+        Assert.assertNotEquals("This is a test.", encrypted4);
+        Assert.assertNotEquals(encrypted1, encrypted4);
+        Assert.assertNotEquals(encrypted2, encrypted4);
+        Assert.assertNotEquals(encrypted3, encrypted4);
+
+        String encrypted5 = sdk.encryptInDomain("This is a test.", "domain-");
+        Assert.assertNotEquals("This is a test.", encrypted5);
+        Assert.assertNotEquals(encrypted1, encrypted5);
+        Assert.assertNotEquals(encrypted2, encrypted5);
+        Assert.assertNotEquals(encrypted3, encrypted5);
+        Assert.assertNotEquals(encrypted4, encrypted5);
+
+        String encrypted6 = sdk.encryptInDomain("This is a test.", "domain-");
+        Assert.assertNotEquals("This is a test.", encrypted6);
+        Assert.assertNotEquals(encrypted1, encrypted6);
+        Assert.assertNotEquals(encrypted2, encrypted6);
+        Assert.assertNotEquals(encrypted3, encrypted6);
+        Assert.assertNotEquals(encrypted4, encrypted6);
+        Assert.assertNotEquals(encrypted5, encrypted6);
+
+        Assert.assertEquals(sdk.decrypt(encrypted1), "This is a test.");
+        Assert.assertEquals(sdk.decrypt(encrypted2), "This is a test.");
+        Assert.assertEquals(sdk.decrypt(encrypted3), "This is a test.");
+        Assert.assertEquals(sdk.decrypt(encrypted4), "This is a test.");
+        Assert.assertEquals(sdk.decrypt(encrypted5), "This is a test.");
+        Assert.assertEquals(sdk.decrypt(encrypted6), "This is a test.");
     }
 
     @Test
