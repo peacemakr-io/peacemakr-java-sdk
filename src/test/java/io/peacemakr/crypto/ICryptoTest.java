@@ -93,7 +93,6 @@ public class ICryptoTest {
 
     @Test
     public void encrypt() throws PeacemakrException {
-
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
         ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "register test", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk.register();
@@ -103,6 +102,9 @@ public class ICryptoTest {
 
         String encrypted = sdk.encrypt("This is a test.");
         Assert.assertNotEquals("This is a test.", encrypted);
+
+        String decrypted = sdk.decrypt(encrypted);
+        Assert.assertEquals("This is a test.", decrypted);
     }
 
     @Test

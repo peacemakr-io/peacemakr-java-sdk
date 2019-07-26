@@ -17,6 +17,7 @@ import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.*;
 import org.apache.log4j.Logger;
 
+import javax.crypto.Cipher;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -516,7 +517,7 @@ public class ICryptoImpl implements ICrypto {
 
     if (this.persister.exists(keyId)) {
       String key = this.persister.load(keyId);
-      return Base64.getDecoder().decode(key.getBytes("UTF-8"));
+      return key.getBytes("UTF-8");
     }
 
     List<String> requiredKeys = new ArrayList<>();
@@ -604,8 +605,13 @@ public class ICryptoImpl implements ICrypto {
     AsymmetricKey signingKey = getSigningKey(useDomainForEncrytpion);
     MessageDigest digest = getDigestAlg(useDomainForEncrytpion.getDigestAlgorithm());
 
-    byte[] encryptedBlob = Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, new byte[]{}, digest);
-    return encryptedBlob;
+    CiphertextAAD aad = new CiphertextAAD();
+    aad.cryptoKeyID = encryptionKeyIdforEncryption;
+    // Key ID for verification
+    aad.senderKeyID = persister.load(PERSISTER_PREFERRED_KEYID);
+    Gson gson = new Gson();
+
+    return Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
   }
 
   @Override
@@ -617,8 +623,19 @@ public class ICryptoImpl implements ICrypto {
   @Override
   public byte[] decrypt(byte[] cipherText) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
+    CiphertextAAD aad = parseCiphertextAAD(new String(Crypto.getCiphertextAAD(cipherText), StandardCharsets.UTF_8));
 
-    return new byte[0];
+    byte[] key = null;
+    try {
+      key = getKey(aad.cryptoKeyID);
+    } catch (UnsupportedEncodingException e) {
+      logger.error("Failed to get key due to ", e);
+      throw new PersistenceLayerCorruptionDetected(e);
+    }
+
+    AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
+
+    return Crypto.decryptSymmetric(key, verificationKey, cipherText);
   }
 
   @Override
