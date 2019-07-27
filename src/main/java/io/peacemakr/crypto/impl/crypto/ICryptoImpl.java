@@ -276,7 +276,11 @@ public class ICryptoImpl implements ICrypto {
   }
 
   private void decryptAndSave(List<EncryptedSymmetricKey> allKeys) throws PeacemakrException {
-    loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(DEFAULT_SYMMETRIC_CIPHER, persister.load(PERSISTER_PRIV_KEY));
+    // Load in our private key
+    if (loadedPrivatePreferredKey == null) {
+      loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(DEFAULT_SYMMETRIC_CIPHER, persister.load(PERSISTER_PRIV_KEY));
+    }
+
     for (EncryptedSymmetricKey key : allKeys) {
 
       if (key == null) {
