@@ -17,7 +17,6 @@ import io.swagger.client.auth.Authentication;
 import io.swagger.client.model.*;
 import org.apache.log4j.Logger;
 
-import javax.crypto.Cipher;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -302,9 +301,15 @@ public class ICryptoImpl implements ICrypto {
 
       AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
 
-      // TODO: handle ECDH keys here too.
-
-      byte[] plaintext = Crypto.decryptAsymmetric(loadedPrivatePreferredKey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
+      byte[] plaintext;
+      if (this.cryptoConfig.getClientKeyType().contains("ec")) {
+        byte[] symmkey = loadedPrivatePreferredKey.ecdhKeygen(DEFAULT_SYMMETRIC_CIPHER, verificationKey);
+        plaintext = Crypto.decryptSymmetric(symmkey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
+      } else if (this.cryptoConfig.getClientKeyType().contains("rsa")) {
+        plaintext = Crypto.decryptAsymmetric(loadedPrivatePreferredKey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
+      } else {
+        throw new InvalidCipherException("Client keys can only be ec or rsa, invalid type: " + this.cryptoConfig.getClientKeyType() + " detected");
+      }
 
       int keyLen = key.getKeyLength();
       int offset = 0;
@@ -587,7 +592,7 @@ public class ICryptoImpl implements ICrypto {
 
     // Create it.
     String privatePem = this.persister.load(PERSISTER_PRIV_KEY);
-    this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(SymmetricCipher.CHACHA20_POLY1305, privatePem);
+    this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(DEFAULT_SYMMETRIC_CIPHER, privatePem);
 
     return this.loadedPrivatePreferredKey;
   }
