@@ -63,7 +63,7 @@ public class ICryptoImpl implements ICrypto {
   private Logger logger;
   private long lastUpdatedAt;
   private AsymmetricKey loadedPrivatePreferredKey;
-  private String loadedPrivatePreferredKeyType;
+  private AsymmetricCipher loadedPrivatePreferredCipher;
 
 
   public ICryptoImpl(String apiKey, String clientName, String peacemakrHostname, Persister persister, Logger logger) {
@@ -126,7 +126,14 @@ public class ICryptoImpl implements ICrypto {
     ApiClient apiClient = getClient();
 
     // Populate Org.
+    this.org = loadOrg(apiClient);
 
+    // Populate Crypto config.
+    this.cryptoConfig = loadCryptoConfig(apiClient);
+
+  }
+
+  private Organization loadOrg(ApiClient apiClient) throws ServerException {
     OrgApi orgApi = new OrgApi(apiClient);
     Organization myOrg;
     try {
@@ -134,8 +141,10 @@ public class ICryptoImpl implements ICrypto {
     } catch (ApiException e) {
       throw new ServerException(e);
     }
-    this.org = myOrg;
+    return myOrg;
+  }
 
+  protected CryptoConfig loadCryptoConfig(ApiClient apiClient) throws ServerException {
     // Populate Crypto config,
     CryptoConfigApi cryptoConfigApi = new CryptoConfigApi(apiClient);
     CryptoConfig cryptoConfig = null;
@@ -144,7 +153,7 @@ public class ICryptoImpl implements ICrypto {
     } catch (ApiException e) {
       throw new ServerException(e);
     }
-    this.cryptoConfig = cryptoConfig;
+    return cryptoConfig;
   }
 
   private boolean isBootstraped() {
@@ -220,7 +229,7 @@ public class ICryptoImpl implements ICrypto {
     this.persister.save(PERSISTER_PREFERRED_KEYID, this.client.getPublicKeys().get(0).getId());
   }
 
-  private AsymmetricCipher getAsymmetricCipher(String asymmetricCipher, int bitlength) {
+  protected AsymmetricCipher getAsymmetricCipher(String asymmetricCipher, int bitlength) {
     AsymmetricCipher clientKeyType;
     switch (asymmetricCipher) {
 
@@ -285,7 +294,7 @@ public class ICryptoImpl implements ICrypto {
     // Load in our private key
     if (loadedPrivatePreferredKey == null) {
       loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(DEFAULT_SYMMETRIC_CIPHER, persister.load(PERSISTER_PRIV_KEY));
-      loadedPrivatePreferredKeyType = persister.load(PERSISTER_ASYM_TYPE);
+      loadedPrivatePreferredCipher = getAsymmetricCipher(persister.load(PERSISTER_ASYM_TYPE), Integer.parseInt(persister.load(PERSISTER_ASYM_BITLEN)));
     }
 
     for (EncryptedSymmetricKey key : allKeys) {
@@ -310,13 +319,13 @@ public class ICryptoImpl implements ICrypto {
       AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
 
       byte[] plaintext;
-      if (this.loadedPrivatePreferredKeyType.contains("ec")) {
+      if (loadedPrivatePreferredCipher == AsymmetricCipher.ECDH_P256 || loadedPrivatePreferredCipher == AsymmetricCipher.ECDH_P384 || loadedPrivatePreferredCipher == AsymmetricCipher.ECDH_P521) {
         byte[] symmkey = loadedPrivatePreferredKey.ecdhKeygen(DEFAULT_SYMMETRIC_CIPHER, verificationKey);
         plaintext = Crypto.decryptSymmetric(symmkey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
-      } else if (this.loadedPrivatePreferredKeyType.contains("rsa")) {
+      } else if (loadedPrivatePreferredCipher == AsymmetricCipher.RSA_2048 || loadedPrivatePreferredCipher == AsymmetricCipher.RSA_4096) {
         plaintext = Crypto.decryptAsymmetric(loadedPrivatePreferredKey, verificationKey, rawCiphertextStr.getBytes(StandardCharsets.UTF_8));
       } else {
-        throw new InvalidCipherException("This version of java SDK only supports ec or rsa, invalid type: " + this.loadedPrivatePreferredKeyType + " detected. This line of code is impossible to hit unless the Persister was corrupted. Please re-initialize.");
+        throw new InvalidCipherException("This version of java SDK only supports ec or rsa, invalid type: " + this.loadedPrivatePreferredCipher + " detected. This line of code is impossible to hit unless the Persister was corrupted. Please re-initialize.");
       }
 
       int keyLen = key.getKeyLength();
@@ -601,7 +610,7 @@ public class ICryptoImpl implements ICrypto {
     // Create it.
     String privatePem = this.persister.load(PERSISTER_PRIV_KEY);
     this.loadedPrivatePreferredKey = AsymmetricKey.fromPrivPem(DEFAULT_SYMMETRIC_CIPHER, privatePem);
-    this.loadedPrivatePreferredKeyType = this.persister.load(PERSISTER_ASYM_TYPE);
+    this.loadedPrivatePreferredCipher = getAsymmetricCipher(this.persister.load(PERSISTER_ASYM_TYPE), Integer.parseInt(this.persister.load(PERSISTER_ASYM_BITLEN)));
 
     return this.loadedPrivatePreferredKey;
   }
