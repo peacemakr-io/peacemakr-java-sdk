@@ -11,7 +11,7 @@ jobs:
       - run:
           command: |
             which java && ls -la /usr/bin/java && java -version &&
-            sudo apt-get -y install curl musl-dev &&
+            sudo apt-get -y install curl &&
             sudo curl -fL -o /openjdk.tgz "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz"
       - run:
           command: |
