@@ -102,12 +102,39 @@ public class ICryptoTest {
 
     }
 
+
+
     @Test
-    public void encryptDecryptWithOneClient() throws PeacemakrException {
-
-
+    public void encryptDecryptWithOneClient_ECDH_P521() throws PeacemakrException {
         AsymmetricCipher fakedAsymmetricCipher = AsymmetricCipher.ECDH_P521;
+        encryptDecryptOneClient(fakedAsymmetricCipher);
+    }
 
+    @Test
+    public void encryptDecryptWithOneClient_ECDH_P384() throws PeacemakrException {
+        AsymmetricCipher fakedAsymmetricCipher = AsymmetricCipher.ECDH_P384;
+        encryptDecryptOneClient(fakedAsymmetricCipher);
+    }
+
+    @Test
+    public void encryptDecryptWithOneClient_ECDH_P256() throws PeacemakrException {
+        AsymmetricCipher fakedAsymmetricCipher = AsymmetricCipher.ECDH_P256;
+        encryptDecryptOneClient(fakedAsymmetricCipher);
+    }
+
+    @Test
+    public void encryptDecryptWithOneClient_RSA_2048() throws PeacemakrException {
+        AsymmetricCipher fakedAsymmetricCipher = AsymmetricCipher.RSA_2048;
+        encryptDecryptOneClient(fakedAsymmetricCipher);
+    }
+
+    @Test
+    public void encryptDecryptWithOneClient_RSA_4096() throws PeacemakrException {
+        AsymmetricCipher fakedAsymmetricCipher = AsymmetricCipher.RSA_4096;
+        encryptDecryptOneClient(fakedAsymmetricCipher);
+    }
+
+    private void encryptDecryptOneClient(AsymmetricCipher fakedAsymmetricCipher) throws PeacemakrException {
         // Violate abstraction layer for access to internal state for more complete testing + asserting.
         ICryptoImpl sdk = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithOneClient", getPeacemakrHostname(), new InMemoryPersister(), null);
 
