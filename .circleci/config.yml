@@ -3,9 +3,30 @@ jobs:
   build:
     machine: true
     java:
+      #TODO: Update to openJDK12 once available.
       version: openjdk12
     steps:
       - checkout # check out source code to working directory
+      #TODO: Remove this temporary workaround, once the circleci natively supports openJDK12.
+      - run:
+          command: |
+            which java && ls -la /usr/bin/java && java -version &&
+            sudo apt-get -y install curl &&
+            sudo curl -fL -o /openjdk.tgz "https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz"
+      - run:
+          command: |
+            sudo mkdir /opt/openjdk-12 &&
+            sudo tar --extract --file /openjdk.tgz --directory "/opt/openjdk-12" --strip-components 1 &&
+            JAVA_HOME=/opt/openjdk-12 &&
+            sudo ln -sfn /opt/openjdk-12/ /docker-java-home &&
+            sudo echo 1 | sudo update-alternatives --install /usr/bin/java java /opt/openjdk-12/bin/java 7777 &&
+            sudo echo 1 | sudo update-alternatives --install /usr/bin/javac javac /opt/openjdk-12/bin/javac 7777 &&
+            sudo echo 1 | sudo update-alternatives --install /usr/bin/jaotc jaotc /opt/openjdk-12/bin/jaotc 7777 &&
+            sudo echo 1 | sudo update-alternatives --install /usr/bin/jar jar /opt/openjdk-12/bin/jar 7777 &&
+            sudo echo 1 | sudo update-alternatives --config java &&
+            sudo echo 1 | sudo update-alternatives --config javac &&
+            sudo echo 1 | sudo update-alternatives --config jaotc &&
+            java -version
       - run: $(aws ecr get-login --no-include-email --region us-east-2)
       - run: docker-compose pull || true
       - run: docker-compose down || true
