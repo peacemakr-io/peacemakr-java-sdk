@@ -3,6 +3,6 @@
 # Ignore all files in the project except swagger generated code.
 .*
 */
-!src/main/java/io/swagger/client/
-!src/test/java/io/swagger/client/
+!src/main/java/io/peacemakr/crypto/swagger/client/
+!src/test/java/io/peacemakr/crypto/swagger/client/
 !docs/

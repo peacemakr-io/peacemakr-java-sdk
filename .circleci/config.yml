@@ -4,7 +4,7 @@ jobs:
     machine: true
     java:
       #TODO: Update to openJDK12 once available.
-      version: openjdk11
+      version: openjdk12
     steps:
       - checkout # check out source code to working directory
       #TODO: Remove this temporary workaround, once the circleci natively supports openJDK12.
@@ -31,5 +31,5 @@ jobs:
       - run: docker-compose pull || true
       - run: docker-compose down || true
       - run: docker-compose up -d
-      - run: ./build_sdk.sh
+      - run: ./build.sh
       - run: docker-compose down || true

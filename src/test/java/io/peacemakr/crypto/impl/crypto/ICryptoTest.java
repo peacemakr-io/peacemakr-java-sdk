@@ -1,28 +1,21 @@
 package io.peacemakr.crypto.impl.crypto;
 
 import io.peacemakr.corecrypto.AsymmetricCipher;
-import io.peacemakr.corecrypto.AsymmetricKey;
 import io.peacemakr.crypto.Factory;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.exception.ServerException;
-import io.peacemakr.crypto.impl.crypto.ICryptoImpl;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
-import io.swagger.client.ApiClient;
-import io.swagger.client.ApiException;
-import io.swagger.client.api.OrgApi;
-import io.swagger.client.model.APIKey;
-import io.swagger.client.model.CryptoConfig;
-import io.swagger.client.model.Organization;
+import io.peacemakr.crypto.swagger.client.ApiClient;
+import io.peacemakr.crypto.swagger.client.ApiException;
+import io.peacemakr.crypto.swagger.client.api.OrgApi;
+import io.peacemakr.crypto.swagger.client.model.APIKey;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.junit.*;
 import org.mockito.Mockito;
-import org.mockito.internal.matchers.Any;
 
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class ICryptoTest {
 
