@@ -11,13 +11,15 @@ public class Factory {
 
     /**
      *
-     * This factory constructs a Peacemakr SDK Clients.
+     * This factory constructs a Peacemakr SDK Client.  All Peacemakr SDK clients
+     * implement the ICrypto interface.
      *
-     * All Peacemakr SDK clients implmenet the ICrypto interface. Calling this produces a new
-     * stateful client of Peacemakr.  Internally, this state includes a private asymmetric
+     * All clients are stateful.  Internally, this state includes a private asymmetric
      * key, local cache of symmetric keys downloaded from Peacemakr so far, ability to
-     * communicate with the peacemakr service org. All persisted data is managed through
-     * your provided Persister.
+     * communicate with the peacemakr service org. All state is persisted through
+     * your provided Persister. This mechanism allows for a single client to re-use
+     * a previously registered api client (and not incur additional overhead due to
+     * re-registering the same client over and over again).
      *
      * Auth is handled through the provided apiKey. If you do not have one, please register
      * at https://admin.peacemakr.io as a new organization. If you have a peacemakr organization
