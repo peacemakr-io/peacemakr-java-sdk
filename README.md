@@ -1,6 +1,6 @@
 # Peacemakr Java SDK
 
-A cloud or on-prem backed SDK that which provides simple, backward compatible, and secure Crypto with built in Key Lifecycle Management.
+This SDK provides simple, backward compatible, and secure Application Layer Cryptography with built in Key Lifecycle Management.
 
 ## QuickStart: Integrating with this SDK
 
