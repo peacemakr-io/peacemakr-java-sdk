@@ -4,33 +4,35 @@ A cloud or on-prem backed SDK that which provides simple, backward compatible, a
 
 ## QuickStart: Integrating with this SDK
 
-## Development and Contributions
+- Navigate to the latest release.
+- Download the `jar`'s from the release tab.
+- Include the jar's in your project's `CLASSPATH`
+- Construct a new instance of the Peacemakr Java SDK, using the facotry:
+- Register a client, using your APIKey provided by your admin poral (https://admin.peacemakr.io).
+- Start Encrypting and Decrypting.
 
-Dependencies:
- - download and install openjdk: https://jdk.java.net/12/
- - untar the download, and install it: `sudo mv jdk-12.0.1.jdk /Library/Java/JavaVirtualMachines/`
- - Update your JAVA_HOME in bash_profile
- - Install intelliJ
- 
-Tricks:
- - Easy switch between java versions on your mac: 
- `brew install jenv`
-  Add the following lines to ~/.bash_profile or ~/.zshrc:
- `# Init jenv
-  if which jenv > /dev/null; then eval "$(jenv init -)"; fi`
-  Add all java version for the on your machine:
-  `jenv add  /Library/Java/JavaVirtualMachines/jdk-12.0.1.jdk/Contents/Home/`\
-  Your current version:
-  `jenv versions`
-  Set global version:
-  `jenv global openjdk64-12.0.1`
+## Contributions
 
-How to build:
+Peacemakr welcomes open and active contributions to this SDK. As long as they're in the spirit of project, we will most likely accept them. However, you may want to get our opinion on proposed changes before investing time, so we can work together to solve problems you encounter that make sense for the future direction we have planned.
+
+## Testing
+
+We use the usual fork and PR mechanisms, and in this section, here are some basic guidelines on how to setup a development environment. Without being a member of peacemakr, you will not have full access to the testing infrastructure required for complete code coverage, but our CircleCI build and test pipeline can be used to provide this level of visibility and provide feedback.
+
+## Development Environment
+
+### Dependencies:
+ - Download and install openjdk: https://jdk.java.net/12/
+ - Untar the download, and install it, for example on a mac: `sudo mv jdk-12.0.1.jdk /Library/Java/JavaVirtualMachines/`
+ - `export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-12.0.1.jdk/Contents/Home` to your `~/.bash_profile`
+ - Install IntelliJ CE
+
+### How to build:
 - `aws ecr get-login --no-include-email --region us-east-2 --profile peacemakr` || true
 - `docker-compose up` (just let this run in a separate window while building, integration tests depend on it locally)
 - `./build.sh`
 
-How to release version x.y.z:
+### How to release version x.y.z:
 - Delete your folder `./build` to ensure a fresh build of all artifacts.
 - Build everything (see above).  Make sure it completes successfully before proceeding.
 - Update all refernces to previous version, to new version. (use `git grep 0.0.1` for example)
