@@ -14,6 +14,12 @@ This SDK provides simple, backward compatible, and secure Application Layer Cryp
    - `byte[] encrypted = peacemakrSDK.encrypt(plaintext);`
    - `byte[] decrypted = peacemakrSDK.decrypt(encrypted);`
 
+## Example Integration:
+
+```
+Put example here.
+```
+
 ## Integration Details
 
  - The Facotry, and constructing a client.
