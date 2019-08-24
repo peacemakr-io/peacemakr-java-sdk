@@ -7,9 +7,12 @@ A cloud or on-prem backed SDK that which provides simple, backward compatible, a
 - Navigate to the latest release.
 - Download the `jar`'s from the release tab.
 - Include the jar's in your project's `CLASSPATH`
-- Construct a new instance of the Peacemakr Java SDK, using the facotry:
-- Register a client, using your APIKey provided by your admin poral (https://admin.peacemakr.io).
-- Start Encrypting and Decrypting.
+- Obtain your APIKey, using your admin poral (https://admin.peacemakr.io).
+- Construct a new instance of the Peacemakr Java SDK, using your APIKey,
+   - `ICrypto peacemakrSDK = Factory.getCryptoSDK(myAPIKey, "my client name", null, new FilePersister("~/.peacemakr"), null);`
+- Start Encrypting and Decrypting, for example,
+   - `byte[] encrypted = peacemakrSDK.encrypt(plaintext);`
+   - `byte[] decrypted = peacemakrSDK.decrypt(encrypted);`
 
 ## Contributions
 
