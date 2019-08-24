@@ -35,11 +35,13 @@ public interface ICrypto {
    */
   String encrypt(String plainText) throws PeacemakrException;
 
+
   /**
-   * Encrypt the plaintext.
+   * Encrypt the plaintext, using a random available usedomain.
    *
-   * @param plainText Plaintext to encrypt.
+   * @param plainText Plaintext bytes to encrypt.
    * @return Opaquely packaged ciphertext.
+   * @throws PeacemakrException On any error (network connectivity issues, authN issues, etc)
    */
   byte[] encrypt(byte[] plainText) throws PeacemakrException;
 

@@ -330,8 +330,10 @@ public class ICryptoImpl implements ICrypto {
 
       int keyLen = key.getKeyLength();
       int offset = 0;
+      String keysAsBase64Str = new String(plaintext);
+      byte[] keysAsBytes = Base64.getDecoder().decode(keysAsBase64Str);
       for (String keyId : key.getKeyIds()) {
-        byte[] currentKeyPlaintext = Arrays.copyOfRange(plaintext, offset, offset + keyLen);
+        byte[] currentKeyPlaintext = Arrays.copyOfRange(keysAsBytes, offset, offset + keyLen);
         persister.save(keyId, Base64.getEncoder().encodeToString(currentKeyPlaintext));
         offset = offset + keyLen;
         logger.debug("Decrypted and saved keyId " + keyId);
