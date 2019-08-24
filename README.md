@@ -2,6 +2,10 @@
 
 A cloud or on-prem backed SDK that which provides simple, backward compatible, and secure Crypto with built in Key Lifecycle Management.
 
+## QuickStart: Integrating with this SDK
+
+## Development and Contributions
+
 Dependencies:
  - download and install openjdk: https://jdk.java.net/12/
  - untar the download, and install it: `sudo mv jdk-12.0.1.jdk /Library/Java/JavaVirtualMachines/`
