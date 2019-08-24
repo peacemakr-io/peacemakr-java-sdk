@@ -2,7 +2,7 @@
 
 This SDK provides simple, backward compatible, and secure Application Layer Cryptography with built in Key Lifecycle Management.
 
-## Quick Start, Integrate this SDK:
+## Quick Start, Integrate this SDK
 
 - Navigate to the latest release.
 - Download the `jar`'s from the release tab.
@@ -14,7 +14,7 @@ This SDK provides simple, backward compatible, and secure Application Layer Cryp
    - `byte[] encrypted = peacemakrSDK.encrypt(plaintext);`
    - `byte[] decrypted = peacemakrSDK.decrypt(encrypted);`
 
-## Example Integration:
+## Example Integration
 
 ```
 Put example here.
