@@ -15,6 +15,7 @@ import org.apache.log4j.LogManager;
 import org.junit.*;
 import org.mockito.Mockito;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
@@ -152,54 +153,54 @@ public class ICryptoTest {
         byte[] plaintextBytes = getRandomBytes();
 
         byte[] encrypted1 = sdkSpy.encrypt(plaintextBytes);
-        Assert.assertNotEquals(plaintextBytes, encrypted1);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted1));
 
         byte[] encrypted2 = sdkSpy.encrypt(plaintextBytes);
-        Assert.assertNotEquals(plaintextBytes, encrypted2);
-        Assert.assertNotEquals(encrypted1, encrypted2);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted2));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted2));
 
         byte[] encrypted3 = sdkSpy.encryptInDomain(plaintextBytes, "default");
-        Assert.assertNotEquals(plaintextBytes, encrypted3);
-        Assert.assertNotEquals(encrypted1, encrypted3);
-        Assert.assertNotEquals(encrypted2, encrypted3);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted3));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted3));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted3));
 
         byte[] encrypted4 = sdkSpy.encryptInDomain(plaintextBytes, "default");
-        Assert.assertNotEquals(plaintextBytes, encrypted4);
-        Assert.assertNotEquals(encrypted1, encrypted4);
-        Assert.assertNotEquals(encrypted2, encrypted4);
-        Assert.assertNotEquals(encrypted3, encrypted4);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted4));
 
         byte[] encrypted5 = sdkSpy.encryptInDomain(plaintextBytes, "domain-0");
-        Assert.assertNotEquals(plaintextBytes, encrypted5);
-        Assert.assertNotEquals(encrypted1, encrypted5);
-        Assert.assertNotEquals(encrypted2, encrypted5);
-        Assert.assertNotEquals(encrypted3, encrypted5);
-        Assert.assertNotEquals(encrypted4, encrypted5);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted5));
 
         byte[] encrypted6 = sdkSpy.encryptInDomain(plaintextBytes, "domain-0");
-        Assert.assertNotEquals(plaintextBytes, encrypted6);
-        Assert.assertNotEquals(encrypted1, encrypted6);
-        Assert.assertNotEquals(encrypted2, encrypted6);
-        Assert.assertNotEquals(encrypted3, encrypted6);
-        Assert.assertNotEquals(encrypted4, encrypted6);
-        Assert.assertNotEquals(encrypted5, encrypted6);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted5, encrypted6));
 
         byte[] encrypted7 = sdkSpy.encryptInDomain(plaintextBytes, "domain-1");
-        Assert.assertNotEquals(plaintextBytes, encrypted6);
-        Assert.assertNotEquals(encrypted1, encrypted7);
-        Assert.assertNotEquals(encrypted2, encrypted7);
-        Assert.assertNotEquals(encrypted3, encrypted7);
-        Assert.assertNotEquals(encrypted4, encrypted7);
-        Assert.assertNotEquals(encrypted5, encrypted7);
-        Assert.assertNotEquals(encrypted6, encrypted7);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted5, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted6, encrypted7));
 
-        Assert.assertEquals(sdkSpy.decrypt(encrypted1), plaintextBytes);
-        Assert.assertEquals(sdkSpy.decrypt(encrypted2), plaintextBytes);
-        Assert.assertEquals(sdkSpy.decrypt(encrypted3), plaintextBytes);
-        Assert.assertEquals(sdkSpy.decrypt(encrypted4), plaintextBytes);
-        Assert.assertEquals(sdkSpy.decrypt(encrypted5), plaintextBytes);
-        Assert.assertEquals(sdkSpy.decrypt(encrypted6), plaintextBytes);
-        Assert.assertEquals(sdkSpy.decrypt(encrypted7), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted1), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted2), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted3), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted4), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted5), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted6), plaintextBytes);
+        Assert.assertArrayEquals(sdkSpy.decrypt(encrypted7), plaintextBytes);
     }
 
     @Test
@@ -212,118 +213,118 @@ public class ICryptoTest {
         byte[] plaintextBytes = getRandomBytes();
 
         byte[] encrypted1 = sdk1.encrypt(plaintextBytes);
-        Assert.assertNotEquals(plaintextBytes, encrypted1);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted1));
 
         byte[] encrypted2 = sdk1.encrypt(plaintextBytes);
-        Assert.assertNotEquals(plaintextBytes, encrypted2);
-        Assert.assertNotEquals(encrypted1, encrypted2);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted2));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted2));
 
         byte[] encrypted3 = sdk1.encryptInDomain(plaintextBytes, "default");
-        Assert.assertNotEquals(plaintextBytes, encrypted3);
-        Assert.assertNotEquals(encrypted1, encrypted3);
-        Assert.assertNotEquals(encrypted2, encrypted3);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted3));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted3));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted3));
 
         byte[] encrypted4 = sdk1.encryptInDomain(plaintextBytes, "default");
-        Assert.assertNotEquals(plaintextBytes, encrypted4);
-        Assert.assertNotEquals(encrypted1, encrypted4);
-        Assert.assertNotEquals(encrypted2, encrypted4);
-        Assert.assertNotEquals(encrypted3, encrypted4);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted4));
 
         byte[] encrypted5 = sdk1.encryptInDomain(plaintextBytes, "domain-0");
-        Assert.assertNotEquals(plaintextBytes, encrypted5);
-        Assert.assertNotEquals(encrypted1, encrypted5);
-        Assert.assertNotEquals(encrypted2, encrypted5);
-        Assert.assertNotEquals(encrypted3, encrypted5);
-        Assert.assertNotEquals(encrypted4, encrypted5);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted5));
 
         byte[] encrypted6 = sdk1.encryptInDomain(plaintextBytes, "domain-0");
-        Assert.assertNotEquals(plaintextBytes, encrypted6);
-        Assert.assertNotEquals(encrypted1, encrypted6);
-        Assert.assertNotEquals(encrypted2, encrypted6);
-        Assert.assertNotEquals(encrypted3, encrypted6);
-        Assert.assertNotEquals(encrypted4, encrypted6);
-        Assert.assertNotEquals(encrypted5, encrypted6);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted5, encrypted6));
 
         byte[] encrypted7 = sdk1.encryptInDomain(plaintextBytes, "domain-1");
-        Assert.assertNotEquals(plaintextBytes, encrypted6);
-        Assert.assertNotEquals(encrypted1, encrypted7);
-        Assert.assertNotEquals(encrypted2, encrypted7);
-        Assert.assertNotEquals(encrypted3, encrypted7);
-        Assert.assertNotEquals(encrypted4, encrypted7);
-        Assert.assertNotEquals(encrypted5, encrypted7);
-        Assert.assertNotEquals(encrypted6, encrypted7);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted5, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted6, encrypted7));
 
         ICryptoImpl sdk2 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithTwoClients 2", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk2.register();
-        Assert.assertEquals(sdk2.decrypt(encrypted1), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted2), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted3), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted4), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted5), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted6), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted7), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted1), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted2), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted3), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted4), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted5), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted6), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted7), plaintextBytes);
 
         encrypted1 = sdk2.encrypt(plaintextBytes);
-        Assert.assertNotEquals(plaintextBytes, encrypted1);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted1));
         encrypted2 = sdk2.encrypt(plaintextBytes);
-        Assert.assertNotEquals(plaintextBytes, encrypted2);
-        Assert.assertNotEquals(encrypted1, encrypted2);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted2));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted2));
         encrypted3 = sdk2.encryptInDomain(plaintextBytes, "default");
-        Assert.assertNotEquals(plaintextBytes, encrypted3);
-        Assert.assertNotEquals(encrypted1, encrypted3);
-        Assert.assertNotEquals(encrypted2, encrypted3);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted3));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted3));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted3));
         encrypted4 = sdk2.encryptInDomain(plaintextBytes, "default");
-        Assert.assertNotEquals(plaintextBytes, encrypted4);
-        Assert.assertNotEquals(encrypted1, encrypted4);
-        Assert.assertNotEquals(encrypted2, encrypted4);
-        Assert.assertNotEquals(encrypted3, encrypted4);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted4));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted4));
         encrypted5 = sdk2.encryptInDomain(plaintextBytes, "domain-0");
-        Assert.assertNotEquals(plaintextBytes, encrypted5);
-        Assert.assertNotEquals(encrypted1, encrypted5);
-        Assert.assertNotEquals(encrypted2, encrypted5);
-        Assert.assertNotEquals(encrypted3, encrypted5);
-        Assert.assertNotEquals(encrypted4, encrypted5);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted5));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted5));
         encrypted6 = sdk2.encryptInDomain(plaintextBytes, "domain-0");
-        Assert.assertNotEquals(plaintextBytes, encrypted6);
-        Assert.assertNotEquals(encrypted1, encrypted6);
-        Assert.assertNotEquals(encrypted2, encrypted6);
-        Assert.assertNotEquals(encrypted3, encrypted6);
-        Assert.assertNotEquals(encrypted4, encrypted6);
-        Assert.assertNotEquals(encrypted5, encrypted6);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted5, encrypted6));
         encrypted7 = sdk2.encryptInDomain(plaintextBytes, "domain-1");
-        Assert.assertNotEquals(plaintextBytes, encrypted6);
-        Assert.assertNotEquals(encrypted1, encrypted7);
-        Assert.assertNotEquals(encrypted2, encrypted7);
-        Assert.assertNotEquals(encrypted3, encrypted7);
-        Assert.assertNotEquals(encrypted4, encrypted7);
-        Assert.assertNotEquals(encrypted5, encrypted7);
-        Assert.assertNotEquals(encrypted6, encrypted7);
+        Assert.assertFalse(Arrays.equals(plaintextBytes, encrypted6));
+        Assert.assertFalse(Arrays.equals(encrypted1, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted2, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted3, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted4, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted5, encrypted7));
+        Assert.assertFalse(Arrays.equals(encrypted6, encrypted7));
 
-        Assert.assertEquals(sdk1.decrypt(encrypted1), plaintextBytes);
-        Assert.assertEquals(sdk1.decrypt(encrypted2), plaintextBytes);
-        Assert.assertEquals(sdk1.decrypt(encrypted3), plaintextBytes);
-        Assert.assertEquals(sdk1.decrypt(encrypted4), plaintextBytes);
-        Assert.assertEquals(sdk1.decrypt(encrypted5), plaintextBytes);
-        Assert.assertEquals(sdk1.decrypt(encrypted6), plaintextBytes);
-        Assert.assertEquals(sdk1.decrypt(encrypted7), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted1), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted2), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted3), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted4), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted5), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted6), plaintextBytes);
+        Assert.assertArrayEquals(sdk1.decrypt(encrypted7), plaintextBytes);
 
-        Assert.assertEquals(sdk2.decrypt(encrypted1), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted2), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted3), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted4), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted5), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted6), plaintextBytes);
-        Assert.assertEquals(sdk2.decrypt(encrypted7), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted1), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted2), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted3), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted4), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted5), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted6), plaintextBytes);
+        Assert.assertArrayEquals(sdk2.decrypt(encrypted7), plaintextBytes);
 
         ICryptoImpl sdk3 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - encryptDecryptWithTwoClients 3", getPeacemakrHostname(), new InMemoryPersister(), null);
         sdk3.register();
-        Assert.assertEquals(sdk3.decrypt(encrypted1), plaintextBytes);
-        Assert.assertEquals(sdk3.decrypt(encrypted2), plaintextBytes);
-        Assert.assertEquals(sdk3.decrypt(encrypted3), plaintextBytes);
-        Assert.assertEquals(sdk3.decrypt(encrypted4), plaintextBytes);
-        Assert.assertEquals(sdk3.decrypt(encrypted5), plaintextBytes);
-        Assert.assertEquals(sdk3.decrypt(encrypted6), plaintextBytes);
-        Assert.assertEquals(sdk3.decrypt(encrypted7), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted1), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted2), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted3), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted4), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted5), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted6), plaintextBytes);
+        Assert.assertArrayEquals(sdk3.decrypt(encrypted7), plaintextBytes);
     }
 
     @Test
