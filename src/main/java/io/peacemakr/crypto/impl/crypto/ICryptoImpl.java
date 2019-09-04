@@ -497,12 +497,6 @@ public class ICryptoImpl implements ICrypto {
     return encryptInDomain(plainText, useDomainName);
   }
 
-  @Override
-  public String encryptInDomain(String plainText, String useDomainName) throws PeacemakrException {
-    verifyIsBootstrappedAndRegistered();
-    return new String(encryptInDomain(plainText.getBytes( StandardCharsets.UTF_8), useDomainName));
-  }
-
   private SymmetricKeyUseDomain getValidUseDomainForEncryption(String useDomain) throws NoValidUseDomainsForEncryptionOperation {
 
       List<SymmetricKeyUseDomain> useDomains = this.cryptoConfig.getSymmetricKeyUseDomains();
