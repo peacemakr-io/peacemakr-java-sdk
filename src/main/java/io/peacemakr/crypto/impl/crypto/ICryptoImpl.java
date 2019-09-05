@@ -466,13 +466,6 @@ public class ICryptoImpl implements ICrypto {
     }
   }
 
-  @Override
-  public String encrypt(String plainText) throws PeacemakrException {
-    verifyIsBootstrappedAndRegistered();
-    byte[] encrypted = encrypt(plainText.getBytes( StandardCharsets.UTF_8));
-    return new String(encrypted);
-  }
-
   private boolean domainIsValidForEncryption(SymmetricKeyUseDomain domain) {
     long nowInSeconds = (System.currentTimeMillis() / 1000);
     return (long) domain.getCreationTime() + (long)domain.getSymmetricKeyEncryptionUseTTL() > nowInSeconds &&
@@ -502,12 +495,6 @@ public class ICryptoImpl implements ICrypto {
     verifyIsBootstrappedAndRegistered();
     String useDomainName = selectUseDomainName();
     return encryptInDomain(plainText, useDomainName);
-  }
-
-  @Override
-  public String encryptInDomain(String plainText, String useDomainName) throws PeacemakrException {
-    verifyIsBootstrappedAndRegistered();
-    return new String(encryptInDomain(plainText.getBytes( StandardCharsets.UTF_8), useDomainName));
   }
 
   private SymmetricKeyUseDomain getValidUseDomainForEncryption(String useDomain) throws NoValidUseDomainsForEncryptionOperation {
@@ -644,12 +631,6 @@ public class ICryptoImpl implements ICrypto {
     Gson gson = new Gson();
 
     return Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
-  }
-
-  @Override
-  public String decrypt(String cipherText) throws PeacemakrException {
-    verifyIsBootstrappedAndRegistered();
-    return new String(decrypt(cipherText.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
