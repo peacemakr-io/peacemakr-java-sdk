@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'application'
+}
+
+group 'peacemakr'
+version '0.0.1-SNAPSHOT'
+
+sourceCompatibility = 1.12
+
+repositories {
+    flatDir {
+        dirs "$rootProject.projectDir/../libs"
+        dirs "$rootProject.projectDir/../build/libs"
+    }
+    mavenCentral()
+}
+
+application {
+    mainClassName = 'io.peacemakr.example.SimpleEncryptDecrypt'
+}
+
+dependencies {
+    implementation name: 'peacemakr-java-sdk-0.0.1-SNAPSHOT'
+    compile group: 'io.peacemakr.corecrypto', name: 'PeacemakrCoreCrypto', version: '0.0.1'
+    compile group: 'log4j', name: 'log4j', version: '1.2.17'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+    compile group: 'com.squareup.okhttp', name: 'okhttp', version: '2.7.5'
+    compile group: 'io.swagger', name: 'swagger-annotations', version: '1.5.22'
+    compile group: 'io.gsonfire', name: 'gson-fire', version: '1.8.3'
+    compile group: 'com.squareup.okhttp', name: 'logging-interceptor', version: '2.7.5'
+    compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+    compile group: 'org.threeten', name: 'threetenbp', version: '1.4.0'
+    
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
+}
+
+task writePom { 
+    doLast {
+        pom {
+            project {
+                inceptionYear '2018'
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'io.peacemakr'
+                    }
+                }
+            }
+        }.writeTo("$buildDir/pom.xml")
+    }
+}

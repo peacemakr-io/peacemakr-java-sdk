@@ -18,7 +18,24 @@ This SDK provides simple, backward compatible, and secure Application Layer Cryp
  - See `example` folder for a encryption / decryption sample app.
 
 ```
-Put example here.
+class SimpleEncryptDecrypt {
+    public static void main(String[] args) throws Exception {
+
+        String apiKey = "your-api-key";
+        InMemoryPersister persister = new InMemoryPersister();
+
+      ICrypto cryptoI = Factory.getCryptoSDK(apiKey, "simple encrypt decrypt", null, persister, null);
+      cryptoI.register();
+
+      String plaintext = "Hellow world!";
+
+      byte[] encrypted = cryptoI.encrypt(plaintext.getBytes());
+      System.out.println("Encrypted: " + new String(encrypted));
+
+      byte[] decrypted = cryptoI.decrypt(encrypted);
+        System.out.println("Decrypted: " + new String(decrypted));
+    }
+}
 ```
 
 ## Integration Details
@@ -71,10 +88,10 @@ Put example here.
 ```
 public interface ICrypto {
   /**
-   * Registers to Peacemakr as a client. The persister is used to detect prior registrations on this client, so safe
+   * Registers to PeaceMakr as a client. The persister is used to detect prior registrations on this client, so safe
    * to call multiple times. Once a successful invocation of Register is executed once, subsequent calls become a
    * noop. One successful call is required before any cryptographic use of this SDK.
-   * <p>
+   * 
    * Registration may fail with invalid apiKey, missing network connectivity, or an invalid persister. On failure,
    * take corrections action and invoke again.
    */
@@ -83,20 +100,11 @@ public interface ICrypto {
   /**
    * Sync all available keys for this client. This invocation will help performance of subsequent encryption
    * and decryption calls.
-   * <p>
+   * 
    * Sync may fail, if registration was not invoked, if there's network connectivity issues, or
    * unexpected authorization issues.
    */
   void sync() throws PeacemakrException;
-
-  /**
-   * Encrypt the plaintext.
-   *
-   * @param plainText Plaintext to encrypt.
-   * @return Base64 encoded ciphertext blob on success, else returns an error.
-   */
-  String encrypt(String plainText) throws PeacemakrException;
-
 
   /**
    * Encrypt the plaintext, using a random available usedomain.
@@ -117,24 +125,8 @@ public interface ICrypto {
    *
    * @param plainText     Plaintext to encrypt.
    * @param useDomainName Non-unique User Domain of your organization's.
-   * @return Base64 encoded ciphertext blob on success, else returns an error.
-   */
-  String encryptInDomain(String plainText, String useDomainName) throws PeacemakrException;
-
-  /**
-   * Encrypt the plaintext, but restrict which keys may be used to a Use Domain of this specific name.
-   *
-   * @param plainText     Plaintext to encrypt.
-   * @param useDomainName Non-unique User Domain of your organization's.
    */
   byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException, UnsupportedEncodingException;
-
-  /**
-   * Decrypt the opaquely packaged ciphertext and return the original plain text.
-   *
-   * @param cipherText CipherText to decrypt.
-   */
-  String decrypt(String cipherText) throws PeacemakrException;
 
   /**
    * Decrypt the opaquely packaged ciphertext and return the original plain text.
