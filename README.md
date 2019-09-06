@@ -27,7 +27,7 @@ class SimpleEncryptDecrypt {
       ICrypto cryptoI = Factory.getCryptoSDK(apiKey, "simple encrypt decrypt", null, persister, null);
       cryptoI.register();
 
-      String plaintext = "Hellow world!";
+      String plaintext = "Hello world!";
 
       byte[] encrypted = cryptoI.encrypt(plaintext.getBytes());
       System.out.println("Encrypted: " + new String(encrypted));
