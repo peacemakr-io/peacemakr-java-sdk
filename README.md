@@ -84,7 +84,7 @@ class SimpleEncryptDecrypt {
     public static ICrypto getCryptoSDK(String apiKey, String clientName, String peacemakrBaseURL, Persister persister, Logger logger) throws PeacemakrException;
 ```
 
-  - The supported crypto operations, (this need to be CLEANED UP)
+  - The interface in this SDK for Application Layer Cryptography:
 ```
 public interface ICrypto {
   /**
