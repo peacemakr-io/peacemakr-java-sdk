@@ -1,0 +1,6 @@
+How to build and run this example.
+
+(1) curl -o ../libs/peacemakr-java-sdk-0.0.1.jar https://github.com/peacemakr-io/peacemakr-java-sdk/releases/download/v0.0.1/peacemakr-java-sdk-0.0.1.jar
+(2) ./gradlew build
+(3) Update the api-key with your org's APIkey.
+(4) ./gradlew run
