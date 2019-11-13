@@ -32,7 +32,7 @@ public class ICryptoImpl implements ICrypto {
   private static final String PERSISTER_PUB_KEY = "Pub";
   private static final String PERSISTER_ASYM_TYPE = "AsymmetricKeyType";
   private static final String PERSISTER_ASYM_CREATED_DATE_EPOCH = "AsymmetricKeyCreated";
-  private static final String PERSISTER_ASYM_BITLEN = "AsymmetricKeyCreated";
+  private static final String PERSISTER_ASYM_BITLEN = "AsymmetricKeyBitlen";
   private static final String PERSISTER_CLIENTID_KEY = "ClientId";
   private static final String PERSISTER_PREFERRED_KEYID = "PreferredKeyId";
   private static final String PERSISTER_APIKEY_KEY = "ApiKey";
@@ -169,7 +169,6 @@ public class ICryptoImpl implements ICrypto {
   private boolean isRegisterd() {
     return persister.exists(PERSISTER_PREFERRED_KEYID) &&
             persister.exists(PERSISTER_CLIENTID_KEY) &&
-            persister.exists(PERSISTER_PREFERRED_KEYID) &&
             persister.exists(PERSISTER_PRIV_KEY) &&
             persister.exists(PERSISTER_PUB_KEY) &&
             persister.exists(PERSISTER_ASYM_TYPE);
