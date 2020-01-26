@@ -1,3 +1,9 @@
+<p align="center">
+  <br>
+    <img src="https://github.com/peacemakr-io/peacemakr-admin-portal/blob/master/peacemakr-admin/public/images/PeacemakrP-Golden.png" width="150"/>
+  <br>
+</p>
+
 # Peacemakr Java SDK
 
 This SDK provides simple, backward compatible, and secure Application Layer Cryptography with built in Key Lifecycle Management.
