@@ -8,7 +8,7 @@
   <packaging>jar</packaging>
  
   <name>Peaceamakr Java Crypto SDK</name>
-  <description>The opensource Peacemakr java crypto SDK. Simple and open source interface into the Peacemakr Key Lifecycle Management  </description>
+  <description>The opensource Peacemakr java crypto SDK. Simple and open source interface into the Peacemakr Key Lifecycle Management</description>
   <url>http://maven.apache.org</url>
  
   <licenses>
@@ -18,9 +18,20 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <developers>
+    <developer>
+      <name>Peacemakr LLC</name>
+      <email>admin@peacemakr.io</email>
+      <organization>Peacemakr</organization>
+      <organizationUrl>https://peacemakr.io/</organizationUrl>
+    </developer>
+  </developers>
  
   <scm>
-    <url>https://github.com/peacemakr-io/peacemakr-java-sdk</url>
+    <connection>scm:git:git://github.com/peacemakr-io/peacemakr-java-sdk.git</connection>
+    <developerConnection>scm:git:ssh://github.com:peacemakr-io/peacemakr-java-sdk.git</developerConnection>
+    <url>https://github.com/peacemakr-io/peacemakr-java-sdk/tree/master</url>
   </scm>
  
   <dependencies>

@@ -3,8 +3,8 @@ plugins {
     id 'maven'
 }
 
-group 'peacemakr'
-version '0.0.1-SNAPSHOT'
+group 'io.peacemakr'
+version '0.0.1'
 
 sourceCompatibility = 1.12
 
@@ -46,5 +46,44 @@ task writePom {
                 }
             }
         }.writeTo("$buildDir/pom.xml")
+    }
+}
+
+task javadocJar(type: Jar) {
+    archiveClassifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+// Build, sign, and upload
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            // Sign POM
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            // Destination
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+            // *-SNAPSHOT versions the snapshotRepository is used.
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+        }
+    }
+
+    // Signing
+    apply plugin: 'signing'
+    signing {
+        sign configurations.archives
     }
 }
