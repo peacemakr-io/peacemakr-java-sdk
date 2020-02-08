@@ -178,3 +178,9 @@ We use the usual fork and PR mechanisms, and in this section, here are some basi
 - `git tag vx.y.z`
 - `git push origin vx.y.z`
 - Login to github. Browse to the project's release section.  Manually upload the 2 jars (CoreCrypto jar and SDK jar's) built from released tag. Update release notes on build release 
+
+### How to release to maven central
+- 'vi ~/.gradle/gradle.properties'
+- fill in all secrets in the local gradle.properties (for 'signing.keyId' provide last 8 chars of the signing key)
+- set you gradle build to use local gradle.properties 'export GRADLE_USER_HOME=(echo ~/.gradle)'
+- ./gradlew uploadArchives
