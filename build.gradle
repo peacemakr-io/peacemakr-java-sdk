@@ -63,7 +63,7 @@ artifacts {
     archives javadocJar, sourcesJar
 }
 
-// Build, sign, and upload
+// Task for Sonatype Nexus OSS: build, sign, and upload
 uploadArchives {
     repositories {
         mavenDeployer {
