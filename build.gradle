@@ -78,8 +78,14 @@ uploadArchives {
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
                 authentication(userName: ossrhUsername, password: ossrhPassword)
             }
+            pom.withXml { provider ->
+                def builder = provider.asString()
+                builder.length = 0
+                builder << project.file("pom.xml").getText("utf-8")
+            }
         }
     }
+
 
     // Signing
     apply plugin: 'signing'
