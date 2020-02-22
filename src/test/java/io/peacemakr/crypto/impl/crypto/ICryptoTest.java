@@ -35,7 +35,7 @@ public class ICryptoTest {
             return hostname;
         }
 
-        return DEFAULT_PEACEMAKR_TEST_HOSTNAME;
+        return "";
     }
 
     private byte[] getRandomBytes() {
@@ -55,24 +55,8 @@ public class ICryptoTest {
         testAPIKey = map.get("PEACEMAKR_TEST_API_KEY");
 
         if (testAPIKey == null) {
-
-            ApiClient apiClient = new ApiClient();
-            apiClient.setBasePath(getPeacemakrHostname() + "/api/v1");
-            apiClient.setApiKey("");
-
-            OrgApi orgApi = new OrgApi(apiClient);
-            APIKey apiKey;
-            try {
-                apiKey = orgApi.getTestOrganizationAPIKey();
-            } catch ( ApiException e) {
-                System.out.println(e);
-                throw new ServerException(e);
-            }
-            this.testAPIKey = apiKey.getKey();
-            this.testOrgId = apiKey.getOrgId();
+            testAPIKey = "";
         }
-
-
     }
 
     @After

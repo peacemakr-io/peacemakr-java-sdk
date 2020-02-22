@@ -6,7 +6,7 @@ plugins {
 group 'io.peacemakr'
 version '0.0.1'
 
-sourceCompatibility = 1.12
+sourceCompatibility = 1.7
 
 repositories {
     flatDir {
