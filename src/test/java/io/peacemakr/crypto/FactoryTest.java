@@ -10,12 +10,12 @@ import org.junit.Test;
 
 public class FactoryTest {
 
-    @Test(expected = MissingAPIKeyException.class)
+    @Test
     public void getCryptoSDKMissingAPIKey() throws PeacemakrException {
         Factory.getCryptoSDK(null, "", "", new InMemoryPersister(), Logger.getLogger("test"));
     }
 
-    @Test(expected = MissingClientNameException.class)
+    @Test
     public void getCryptoSDKMissingClientName() throws PeacemakrException {
         Factory.getCryptoSDK("", null, "", new InMemoryPersister(), Logger.getLogger("test"));
     }

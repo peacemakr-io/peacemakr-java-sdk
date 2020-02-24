@@ -7,6 +7,8 @@ import io.peacemakr.crypto.exception.PeacemakrException;
 import io.peacemakr.crypto.impl.crypto.ICryptoImpl;
 import org.apache.log4j.Logger;
 
+import java.util.UUID;
+
 public class Factory {
 
     /**
@@ -51,11 +53,12 @@ public class Factory {
     public static ICrypto getCryptoSDK(String apiKey, String clientName, String peacemakrBaseURL, Persister persister, Logger logger) throws PeacemakrException {
 
         if (apiKey == null) {
-            throw new MissingAPIKeyException();
+            apiKey = "";
         }
 
         if (clientName == null) {
-            throw new MissingClientNameException();
+            UUID uuid = UUID.randomUUID();
+            clientName = uuid.toString();
         }
 
         if (peacemakrBaseURL == null) {
@@ -70,7 +73,9 @@ public class Factory {
             logger = Logger.getLogger(ICrypto.class);
         }
 
-        return new ICryptoImpl(apiKey, clientName, peacemakrBaseURL, persister, logger);
+        ICryptoImpl out = new ICryptoImpl(apiKey, clientName, peacemakrBaseURL, persister, logger);
+        out.init();
+        return out;
     }
 
 }

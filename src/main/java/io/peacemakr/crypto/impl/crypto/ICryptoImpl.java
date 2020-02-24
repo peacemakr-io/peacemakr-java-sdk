@@ -19,10 +19,7 @@ import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ICryptoImpl implements ICrypto {
@@ -39,9 +36,9 @@ public class ICryptoImpl implements ICrypto {
 
 
   private static final String Chacha20Poly1305 = "Peacemakr.Symmetric.CHACHA20_POLY1305";
-  private static final String Aes128gcm        = "Peacemakr.Symmetric.AES_128_GCM";
-  private static final String Aes192gcm        = "Peacemakr.Symmetric.AES_192_GCM";
-  private static final String Aes256gcm        = "Peacemakr.Symmetric.AES_256_GCM";
+  private static final String Aes128gcm = "Peacemakr.Symmetric.AES_128_GCM";
+  private static final String Aes192gcm = "Peacemakr.Symmetric.AES_192_GCM";
+  private static final String Aes256gcm = "Peacemakr.Symmetric.AES_256_GCM";
   private static final SymmetricCipher DEFAULT_SYMMETRIC_CIPHER = SymmetricCipher.CHACHA20_POLY1305;
 
   private static final String Sha224 = "Peacemakr.Digest.SHA_224";
@@ -78,6 +75,15 @@ public class ICryptoImpl implements ICrypto {
     this.lastUpdatedAt = 0;
   }
 
+  public void init() throws PeacemakrException {
+    // Loads the crypto lib, if not done so already.
+    try {
+      Crypto.init();
+    } catch (java.lang.UnsatisfiedLinkError e) {
+      throw new PeacemakrException("Failed to link peacemakr core cryptolib: " + e.getMessage());
+    }
+  }
+
   private synchronized String getApiKey() throws PeacemakrException {
     if (apiKey == null) {
       throw new PeacemakrException("Missing api key, please provide apiKey when constructing the SDK.");
@@ -97,9 +103,9 @@ public class ICryptoImpl implements ICrypto {
     apiClient.setApiKey(getApiKey());
 
     // 30 second timeouts.
-    apiClient.setConnectTimeout(30*1000);
-    apiClient.setReadTimeout(30*1000);
-    apiClient.setWriteTimeout(30*1000);
+    apiClient.setConnectTimeout(30 * 1000);
+    apiClient.setReadTimeout(30 * 1000);
+    apiClient.setWriteTimeout(30 * 1000);
 
     // Save this for later.
     persister.save(PERSISTER_APIKEY_KEY, apiKey);
@@ -109,14 +115,6 @@ public class ICryptoImpl implements ICrypto {
   }
 
   private synchronized void doBootstrapOrgAndCryptoConfig() throws PeacemakrException {
-
-    // Loads the crypto lib, if not done so already.
-    try {
-      Crypto.init();
-    } catch (java.lang.UnsatisfiedLinkError e) {
-      throw new PeacemakrException("Failed to link peacemakr core cryptolib: " + e.getMessage());
-    }
-
 
     // If it's already bootstrapped, don't do it agian.
     if (isBootstraped()) {
@@ -161,6 +159,10 @@ public class ICryptoImpl implements ICrypto {
   }
 
   private void verifyIsBootstrappedAndRegistered() throws PeacemakrException {
+    if (apiKey.equals("")) {
+      return;
+    }
+
     if (!isBootstraped() || !isRegisterd()) {
       throw new PeacemakrException("SDK was not registered, please register before using other SDK operations.");
     }
@@ -176,6 +178,24 @@ public class ICryptoImpl implements ICrypto {
 
   @Override
   public synchronized void register() throws PeacemakrException {
+
+    if (getApiKey().equals("")) {
+      logger.debug("Using local-only test settings for client because there is no API Key");
+      this.persister.save(PERSISTER_CLIENTID_KEY, "my-client-id");
+      this.persister.save(PERSISTER_PREFERRED_KEYID, "my-public-key-id");
+
+      this.cryptoConfig = new CryptoConfig();
+      this.cryptoConfig.setClientKeyBitlength(256);
+      this.cryptoConfig.setClientKeyTTL((int) 3.15576E+07);
+      this.cryptoConfig.setClientKeyType("ec");
+      this.cryptoConfig.setId("my-crypto-config-id");
+      this.cryptoConfig.setOwnerOrgId("my-org-id");
+
+      PublicKey publicKey = genNewAsymmetricKeypair(this.persister);
+      this.persister.save("my-public-key-id", publicKey.getKey());
+
+      return;
+    }
 
     if (isRegisterd()) {
       if (!isBootstraped()) {
@@ -360,7 +380,7 @@ public class ICryptoImpl implements ICrypto {
       return;
     }
 
-    String curAsymmetricKeyBitLenS =  persister.load(PERSISTER_ASYM_BITLEN);
+    String curAsymmetricKeyBitLenS = persister.load(PERSISTER_ASYM_BITLEN);
     int asymmetricKeyBitLen = Integer.parseInt(curAsymmetricKeyBitLenS);
     if (asymmetricKeyBitLen != newConfig.getClientKeyBitlength()) {
       logger.info("Detected an updated local asymmetric client key bitlength requirement of " + newConfig.getClientKeyBitlength() + " insteads of the previous " + curAsymmetricKeyBitLenS);
@@ -382,7 +402,7 @@ public class ICryptoImpl implements ICrypto {
   }
 
   private PublicKey genNewAsymmetricKeypair(Persister p) throws UnrecoverableClockSkewDetectedException {
-    AsymmetricCipher clientKeyType  = getAsymmetricCipher(this.cryptoConfig.getClientKeyType(), this.cryptoConfig.getClientKeyBitlength());
+    AsymmetricCipher clientKeyType = getAsymmetricCipher(this.cryptoConfig.getClientKeyType(), this.cryptoConfig.getClientKeyBitlength());
     SymmetricCipher thisIsNeverUsed = SymmetricCipher.CHACHA20_POLY1305;
 
     AsymmetricKey clientKey = AsymmetricKey.fromPRNG(clientKeyType, thisIsNeverUsed);
@@ -401,7 +421,7 @@ public class ICryptoImpl implements ICrypto {
       throw new UnrecoverableClockSkewDetectedException("Failed to detect a valid time for local asymmetric key creation time," +
               " time expected to be less than " + Integer.MAX_VALUE);
     }
-    publicKey.setCreationTime((int)seconds);
+    publicKey.setCreationTime((int) seconds);
     publicKey.setEncoding("pem");
     publicKey.setId("");
     publicKey.setKey(publicKeyPEM);
@@ -412,7 +432,7 @@ public class ICryptoImpl implements ICrypto {
 
   private synchronized void genAndRegisterNewPreferredClientKey() throws PeacemakrException {
     logger.info("Generating a new preferred client key");
-    InMemoryPersister tempInMemoryPerister=  new InMemoryPersister();
+    InMemoryPersister tempInMemoryPerister = new InMemoryPersister();
     PublicKey publicKey = genNewAsymmetricKeypair(tempInMemoryPerister);
 
     logger.info("Registering the new public key");
@@ -432,6 +452,11 @@ public class ICryptoImpl implements ICrypto {
 
   @Override
   public void sync() throws PeacemakrException {
+    if (apiKey.equals("")) {
+      logger.warn("No sync occurred because there is no API Key");
+      return;
+    }
+
     verifyIsBootstrappedAndRegistered();
 
     CryptoConfigApi cryptoConfigApi = new CryptoConfigApi(getClient());
@@ -443,7 +468,7 @@ public class ICryptoImpl implements ICrypto {
       } else {
         updateLocalCryptoConfig(newConfig);
       }
-    } catch ( ApiException e) {
+    } catch (ApiException e) {
       logger.error("failed to pull new crypto config from server during sync due to", e);
       throw new ServerException(e);
     }
@@ -467,11 +492,15 @@ public class ICryptoImpl implements ICrypto {
 
   private boolean domainIsValidForEncryption(SymmetricKeyUseDomain domain) {
     long nowInSeconds = (System.currentTimeMillis() / 1000);
-    return (long) domain.getCreationTime() + (long)domain.getSymmetricKeyEncryptionUseTTL() > nowInSeconds &&
-            (long) domain.getCreationTime() + (long)domain.getSymmetricKeyInceptionTTL() <= nowInSeconds;
+    return (long) domain.getCreationTime() + (long) domain.getSymmetricKeyEncryptionUseTTL() > nowInSeconds &&
+            (long) domain.getCreationTime() + (long) domain.getSymmetricKeyInceptionTTL() <= nowInSeconds;
   }
 
   private String selectUseDomainName() {
+
+    if (apiKey.equals("")) {
+      return "my-use-domain";
+    }
 
     List<SymmetricKeyUseDomain> validForEncryption = new ArrayList<>();
 
@@ -498,32 +527,41 @@ public class ICryptoImpl implements ICrypto {
 
   private SymmetricKeyUseDomain getValidUseDomainForEncryption(String useDomain) throws NoValidUseDomainsForEncryptionOperation {
 
-      List<SymmetricKeyUseDomain> useDomains = this.cryptoConfig.getSymmetricKeyUseDomains();
-      List<SymmetricKeyUseDomain> validDomainWithThisName = new ArrayList<>();
+    if (apiKey.equals("")) {
+      return new SymmetricKeyUseDomain();
+    }
 
-      logger.debug("Looking for the domain " + useDomain + " in a total of " + useDomains.size() + " use domains.");
+    List<SymmetricKeyUseDomain> useDomains = this.cryptoConfig.getSymmetricKeyUseDomains();
+    List<SymmetricKeyUseDomain> validDomainWithThisName = new ArrayList<>();
 
-      for (SymmetricKeyUseDomain domain : useDomains) {
-        if (!domain.getName().equals(useDomain)) {
-          continue;
-        }
-        if (!domainIsValidForEncryption(domain)) {
-          continue;
-        }
-        if (domain.getEncryptionKeyIds().isEmpty()) {
-          continue;
-        }
-        validDomainWithThisName.add(domain);
+    logger.debug("Looking for the domain " + useDomain + " in a total of " + useDomains.size() + " use domains.");
+
+    for (SymmetricKeyUseDomain domain : useDomains) {
+      if (!domain.getName().equals(useDomain)) {
+        continue;
       }
-
-      if (validDomainWithThisName.isEmpty()) {
-        throw new NoValidUseDomainsForEncryptionOperation("No valid use domain for encryption found, with the name " + useDomain);
+      if (!domainIsValidForEncryption(domain)) {
+        continue;
       }
+      if (domain.getEncryptionKeyIds().isEmpty()) {
+        continue;
+      }
+      validDomainWithThisName.add(domain);
+    }
 
-      return validDomainWithThisName.get(ThreadLocalRandom.current().nextInt(validDomainWithThisName.size()));
+    if (validDomainWithThisName.isEmpty()) {
+      throw new NoValidUseDomainsForEncryptionOperation("No valid use domain for encryption found, with the name " + useDomain);
+    }
+
+    return validDomainWithThisName.get(ThreadLocalRandom.current().nextInt(validDomainWithThisName.size()));
   }
 
   private String getEncryptionKeyId(SymmetricKeyUseDomain useDomain) {
+
+    if (apiKey.equals("")) {
+      logger.warn("Returning local-only test key because there is no API Key");
+      return "local-only-test-key";
+    }
 
     int randomId = ThreadLocalRandom.current().nextInt(useDomain.getEncryptionKeyIds().size());
 
@@ -531,6 +569,12 @@ public class ICryptoImpl implements ICrypto {
   }
 
   private byte[] getKey(String keyId) throws UnsupportedEncodingException, PeacemakrException {
+
+    if (keyId.equals("local-only-test-key")) {
+      byte[] keyToReturn = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+      logger.warn("The key being returned is: " + keyToReturn.toString() + " DO NOT USE IN PRODUCTION");
+      return keyToReturn;
+    }
 
     if (this.persister.exists(keyId)) {
       String key = this.persister.load(keyId);
@@ -629,6 +673,10 @@ public class ICryptoImpl implements ICrypto {
     aad.senderKeyID = persister.load(PERSISTER_PREFERRED_KEYID);
     Gson gson = new Gson();
 
+    if (apiKey.equals("")) {
+      return Crypto.encryptSymmetric(key, symmetricCipher, null, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
+    }
+
     return Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
   }
 
@@ -647,6 +695,10 @@ public class ICryptoImpl implements ICrypto {
 
     AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
 
+    if (apiKey.equals("")) {
+      Crypto.decryptSymmetric(key, null, cipherText);
+    }
+
     return Crypto.decryptSymmetric(key, verificationKey, cipherText);
   }
 
@@ -662,8 +714,8 @@ public class ICryptoImpl implements ICrypto {
     }
 
     preferredKeyId = "Unknown" + PERSISTER_PREFERRED_KEYID;
-    if (persister != null && persister.exists( PERSISTER_PREFERRED_KEYID)) {
-      preferredKeyId = persister.load( PERSISTER_PREFERRED_KEYID);
+    if (persister != null && persister.exists(PERSISTER_PREFERRED_KEYID)) {
+      preferredKeyId = persister.load(PERSISTER_PREFERRED_KEYID);
     }
 
     clientId = "Unknown" + PERSISTER_CLIENTID_KEY;
