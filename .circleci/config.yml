@@ -1,6 +1,15 @@
 version: 2
+shared: &shared
+  - run: $(aws ecr get-login --no-include-email --region us-east-2)
+  - run: docker-compose pull || true
+  - run: docker-compose down || true
+  - run: docker-compose up -d
+  - run: ./build.sh
+  - run: docker-compose down || true
+
 jobs:
-  build:
+  java-12:
+    build:
     machine: true
     java:
       #TODO: Update to openJDK12 once available.
@@ -33,3 +42,29 @@ jobs:
       - run: docker-compose up -d
       - run: ./build.sh
       - run: docker-compose down || true
+
+  java-8:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout # check out source code to working directory
+      - run:
+          name: Install PIP
+          command: sudo apt-get update && sudo apt install python3-pip
+      - run:
+          name: Install awscli
+          command: sudo pip3 install awscli
+      - setup_remote_docker
+      - run: $(aws ecr get-login --no-include-email --region us-east-2)
+      - run: docker-compose pull || true
+      - run: docker-compose down || true
+      - run: docker-compose up -d
+      - run: ./build.sh
+      - run: docker-compose down || true
+
+workflows:
+  version: 2
+  work:
+    jobs:
+#      - java-8
+      - java-12
