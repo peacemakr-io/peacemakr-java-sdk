@@ -1,9 +1,8 @@
-def compiler_version = ""
-if(JavaVersion.current() == JavaVersion.VERSION_1_7){
+def package_identifier
+def java_version = JavaVersion.VERSION_1_7
+if(JavaVersion.current() == java_version){
     logger.lifecycle('Setting project name to \'peacemakr-java-sdk-jdk7\'.')
-    compiler_version = "-jdk7"
-} else if(JavaVersion.current() == JavaVersion.VERSION_1_8){
-    logger.lifecycle('Setting project name to \'peacemakr-java-sdk-jdk8\'.')
-    compiler_version = "-jdk8"
-}
-rootProject.name = 'peacemakr-java-sdk' + compiler_version
+    package_identifier = "-jdk7"
+} else
+    throw new GradleException('This release expects java v' + java_version + ' for a compilation.')
+rootProject.name = 'peacemakr-java-sdk' + package_identifier
