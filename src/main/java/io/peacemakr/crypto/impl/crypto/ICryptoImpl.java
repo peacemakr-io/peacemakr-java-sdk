@@ -1,5 +1,6 @@
 package io.peacemakr.crypto.impl.crypto;
 
+import com.google.common.io.BaseEncoding;
 import com.google.gson.Gson;
 import io.peacemakr.corecrypto.*;
 import io.peacemakr.crypto.ICrypto;
@@ -19,12 +20,14 @@ import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ICryptoImpl implements ICrypto {
 
-  private static final String JAVA_SDK_VERSION = "0.0.1";
+  private static final String JAVA_SDK_VERSION = "0.0.2";
   private static final String PERSISTER_PRIV_KEY = "Priv";
   private static final String PERSISTER_PUB_KEY = "Pub";
   private static final String PERSISTER_ASYM_TYPE = "AsymmetricKeyType";
@@ -350,10 +353,10 @@ public class ICryptoImpl implements ICrypto {
       int keyLen = key.getKeyLength();
       int offset = 0;
       String keysAsBase64Str = new String(plaintext);
-      byte[] keysAsBytes = Base64.getDecoder().decode(keysAsBase64Str);
+      byte[] keysAsBytes = BaseEncoding.base64().decode(keysAsBase64Str);
       for (String keyId : key.getKeyIds()) {
         byte[] currentKeyPlaintext = Arrays.copyOfRange(keysAsBytes, offset, offset + keyLen);
-        persister.save(keyId, Base64.getEncoder().encodeToString(currentKeyPlaintext));
+        persister.save(keyId, BaseEncoding.base64().encode(currentKeyPlaintext));
         offset = offset + keyLen;
         logger.debug("Decrypted and saved keyId " + keyId);
       }
@@ -578,7 +581,7 @@ public class ICryptoImpl implements ICrypto {
 
     if (this.persister.exists(keyId)) {
       String key = this.persister.load(keyId);
-      return Base64.getDecoder().decode(key);
+      return BaseEncoding.base64().decode(key);
     }
 
     List<String> requiredKeys = new ArrayList<>();
@@ -590,7 +593,7 @@ public class ICryptoImpl implements ICrypto {
     }
 
     String key = this.persister.load(keyId);
-    return Base64.getDecoder().decode(key);
+    return BaseEncoding.base64().decode(key);
   }
 
   private SymmetricCipher getSymmetricCipher(String symmetricKeyEncryptionAlg) {

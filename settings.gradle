@@ -1,1 +1,9 @@
-rootProject.name = 'peacemakr-java-sdk'
+def compiler_version = ""
+if(JavaVersion.current() == JavaVersion.VERSION_1_7){
+    logger.lifecycle('Setting project name to \'peacemakr-java-sdk-jdk7\'.')
+    compiler_version = "-jdk7"
+} else if(JavaVersion.current() == JavaVersion.VERSION_1_8){
+    logger.lifecycle('Setting project name to \'peacemakr-java-sdk-jdk8\'.')
+    compiler_version = "-jdk8"
+}
+rootProject.name = 'peacemakr-java-sdk' + compiler_version
