@@ -4,12 +4,7 @@ import io.peacemakr.corecrypto.AsymmetricCipher;
 import io.peacemakr.crypto.Factory;
 import io.peacemakr.crypto.ICrypto;
 import io.peacemakr.crypto.exception.PeacemakrException;
-import io.peacemakr.crypto.exception.ServerException;
 import io.peacemakr.crypto.impl.persister.InMemoryPersister;
-import io.peacemakr.crypto.swagger.client.ApiClient;
-import io.peacemakr.crypto.swagger.client.ApiException;
-import io.peacemakr.crypto.swagger.client.api.OrgApi;
-import io.peacemakr.crypto.swagger.client.model.APIKey;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.junit.*;
@@ -309,6 +304,39 @@ public class ICryptoTest {
         Assert.assertArrayEquals(sdk3.decrypt(encrypted5), plaintextBytes);
         Assert.assertArrayEquals(sdk3.decrypt(encrypted6), plaintextBytes);
         Assert.assertArrayEquals(sdk3.decrypt(encrypted7), plaintextBytes);
+    }
+
+    @Test
+    public void testSignVerifyOnly() throws PeacemakrException {
+        ICryptoImpl clientsdk1 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - testSignVerifyOnly client 1", getPeacemakrHostname(), new InMemoryPersister(), null);
+        clientsdk1.register();
+
+        // Signed blob by client 1
+        byte[] plaintextClient1 = "Hello, client 1".getBytes();
+        byte[] signedBlobClient1 = clientsdk1.signOnly(plaintextClient1);
+
+        // Verified by client 1
+        byte[] verifiedTextClient1 = clientsdk1.verifyOnly(signedBlobClient1);
+        Assert.assertArrayEquals(plaintextClient1, verifiedTextClient1);
+
+        // client 2
+        ICryptoImpl clientsdk2 = (ICryptoImpl) Factory.getCryptoSDK(this.testAPIKey, "java sdk - testSignVerifyOnly client 2", getPeacemakrHostname(), new InMemoryPersister(), null);
+        clientsdk2.register();
+
+        // Signed blob by client 2
+        byte[] plaintextClient2 = "Hello, client 2".getBytes();
+        byte[] signedBlobClient2 = clientsdk2.signOnly(plaintextClient2);
+
+        // Verified by client 2
+        byte[] verifiedTextClient2 = clientsdk2.verifyOnly(signedBlobClient2);
+        Assert.assertArrayEquals(plaintextClient2, verifiedTextClient2);
+
+        // client1 tries to verifying a blob signed by client2
+        // this test is omitted until after the staging environment has been set up or
+        // CryptoImplTesting has been implemented
+        //
+        // This has been tested against live env
+//        clientsdk1.verifyOnly(signedBlobClient2);
     }
 
     @Test
