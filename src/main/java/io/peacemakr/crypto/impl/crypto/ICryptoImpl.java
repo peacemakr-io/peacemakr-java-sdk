@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ICryptoImpl implements ICrypto {
 
-  private static final String JAVA_SDK_VERSION = "0.0.1";
+  private static final String JAVA_SDK_VERSION = "0.0.3";
   private static final String PERSISTER_PRIV_KEY = "Priv";
   private static final String PERSISTER_PUB_KEY = "Pub";
   private static final String PERSISTER_ASYM_TYPE = "AsymmetricKeyType";
@@ -45,6 +45,7 @@ public class ICryptoImpl implements ICrypto {
   private static final String Sha256 = "Peacemakr.Digest.SHA_256";
   private static final String Sha384 = "Peacemakr.Digest.SHA_384";
   private static final String Sha512 = "Peacemakr.Digest.SHA_512";
+  private static final String DIGEST_UNSPECIFIED = "Peacemakr.Digest.DIGEST_UNSPECIFIED";
   private static final MessageDigest DEFAULT_MESSAGE_DIGEST = MessageDigest.SHA_256;
 
   private final String apiKey;
@@ -178,10 +179,11 @@ public class ICryptoImpl implements ICrypto {
 
   @Override
   public synchronized void register() throws PeacemakrException {
-
+    // TODO: remove any mentions of 'local-only testing' in production code
     if (getApiKey().equals("")) {
       logger.debug("Using local-only test settings for client because there is no API Key");
       this.persister.save(PERSISTER_CLIENTID_KEY, "my-client-id");
+      // String publicKeyId = "my-public-key-id" + ThreadLocalRandom.current().nextInt();
       this.persister.save(PERSISTER_PREFERRED_KEYID, "my-public-key-id");
 
       this.cryptoConfig = new CryptoConfig();
@@ -519,10 +521,10 @@ public class ICryptoImpl implements ICrypto {
   }
 
   @Override
-  public byte[] encrypt(byte[] plainText) throws PeacemakrException {
+  public byte[] encrypt(byte[] plaintext) throws PeacemakrException {
     verifyIsBootstrappedAndRegistered();
     String useDomainName = selectUseDomainName();
-    return encryptInDomain(plainText, useDomainName);
+    return encryptInDomain(plaintext, useDomainName);
   }
 
   private SymmetricKeyUseDomain getValidUseDomainForEncryption(String useDomain) throws NoValidUseDomainsForEncryptionOperation {
@@ -620,6 +622,8 @@ public class ICryptoImpl implements ICrypto {
         return MessageDigest.SHA_384;
       case Sha512:
         return MessageDigest.SHA_512;
+      case DIGEST_UNSPECIFIED:
+        return MessageDigest.DIGEST_UNSPECIFIED;
       default:
         logger.warn("Unknown digest alg " + digestAlgorithm + ", so using the default of " + DEFAULT_MESSAGE_DIGEST);
         return DEFAULT_MESSAGE_DIGEST;
@@ -634,6 +638,10 @@ public class ICryptoImpl implements ICrypto {
       return null;
     }
 
+    return getAsymmetricPrivateKey();
+  }
+
+  private AsymmetricKey getAsymmetricPrivateKey() {
     // If we've already loaded this, just re-use it.
     if (this.loadedPrivatePreferredKey != null) {
       return this.loadedPrivatePreferredKey;
@@ -674,10 +682,13 @@ public class ICryptoImpl implements ICrypto {
     Gson gson = new Gson();
 
     if (apiKey.equals("")) {
-      return Crypto.encryptSymmetric(key, symmetricCipher, null, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
+      signingKey = null;
     }
 
-    return Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
+    byte[] encryptedBlob = Crypto.encryptSymmetric(key, symmetricCipher, signingKey, plainText, gson.toJson(aad).getBytes(StandardCharsets.UTF_8), digest);
+    if (encryptedBlob == null)
+      throw new PeacemakrException("Encryption failed");
+    return encryptedBlob;
   }
 
   @Override
@@ -696,10 +707,83 @@ public class ICryptoImpl implements ICrypto {
     AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
 
     if (apiKey.equals("")) {
-      Crypto.decryptSymmetric(key, null, cipherText);
+      verificationKey = null;
     }
 
-    return Crypto.decryptSymmetric(key, verificationKey, cipherText);
+    byte[] decryptedMessage = Crypto.decryptSymmetric(key, verificationKey, cipherText);
+    if (decryptedMessage == null)
+      throw new PeacemakrException("Decryption failed");
+    return decryptedMessage;
+  }
+
+  @Override
+  public byte[] signOnly(byte[] plaintext) throws PeacemakrException {
+    verifyIsBootstrappedAndRegistered();
+
+    // validate the input
+    if (plaintext == null)
+      throw new PeacemakrException("Provided plain text array object can not be null");
+    else if (plaintext.length == 0) {
+      throw new PeacemakrException("Provided plain text array object can not be empty");
+    }
+
+    // get client's public key id
+    String publicKeyId = this.persister.load(PERSISTER_PREFERRED_KEYID);
+    if (publicKeyId == null || publicKeyId.isEmpty())
+      throw new PeacemakrException("Failed to obtain public key id");
+
+    // Signing key
+    AsymmetricKey signingPrivateKey = getAsymmetricPrivateKey();
+
+    // Construct AAD
+    CiphertextAAD aad = new CiphertextAAD();
+    aad.cryptoKeyID = "";
+    aad.senderKeyID = publicKeyId;
+
+    // ADD bytes
+    Gson gson = new Gson();
+    byte[] addStringBytes = gson.toJson(aad).getBytes(StandardCharsets.UTF_8);
+
+    // Message digest
+    MessageDigest digest = MessageDigest.SHA_256;
+
+    byte[] signedBlob = Crypto.signAsymmetric(signingPrivateKey, plaintext, addStringBytes, digest);
+    // Crypto.signAsymmetric might return null if failed to create a signing key
+    if (signedBlob == null)
+      throw new PeacemakrException("Singing failed");
+    return signedBlob;
+  }
+
+  @Override
+  public byte[] verifyOnly(byte[] signedBlob) throws PeacemakrException {
+    // validate the input
+    if (signedBlob == null)
+      throw new PeacemakrException("Provided signed blob array object can not be null");
+    else if (signedBlob.length == 0) {
+      throw new PeacemakrException("Provided signed blob array object can not be empty");
+    }
+
+    // Get an aad from the signed blob
+    CiphertextAAD aad = parseCiphertextAAD(new String(Crypto.getCiphertextAAD(signedBlob), StandardCharsets.UTF_8));
+    if (aad == null) {
+      throw new PeacemakrException("Failed to obtain aad from the signed blob");
+    }
+
+    if (aad.senderKeyID == null) {
+      throw new PeacemakrException("senderKeyID in aad can not be null");
+    }
+
+    // Obtain signer's public key
+    AsymmetricKey verificationKey = getOrDownloadPublicKey(aad.senderKeyID);
+    if (verificationKey == null) {
+      throw new PeacemakrException("Failed to obtain a public key of key id " + aad.senderKeyID);
+    }
+
+    byte[] verifiedBlob = Crypto.verifyAsymmetric(verificationKey, signedBlob);
+    // null is returned if failed to verify
+    if (verifiedBlob == null)
+      throw new PeacemakrException("Verification failed");
+    return verifiedBlob;
   }
 
   @Override

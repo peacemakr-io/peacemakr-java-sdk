@@ -30,11 +30,11 @@ public interface ICrypto {
   /**
    * Encrypt the plaintext, using a random available usedomain.
    * <p>
-   * @param plainText Plaintext bytes to encrypt.
+   * @param plaintext Plaintext bytes to encrypt.
    * @return Opaquely packaged ciphertext.
    * @throws PeacemakrException On any error (network connectivity issues, authN issues, etc)
    */
-  byte[] encrypt(byte[] plainText) throws PeacemakrException;
+  byte[] encrypt(byte[] plaintext) throws PeacemakrException;
 
   /**
    * Encrypt the plaintext, but restrict which keys may be used to a Use Domain of this specific name. Names of Use
@@ -62,7 +62,25 @@ public interface ICrypto {
   byte[] decrypt(byte[] cipherText) throws PeacemakrException;
 
   /**
-   * For visibility or debugging purposes, returns a string whihc identifies which
+   * Sign the message.
+   * <p>
+   * @param plaintext clear text.
+   * @return A signedBlob upon success. The blob contains the originally signed message.
+   * @throws PeacemakrException if an exception occurs during signing attempt.
+   */
+  byte[] signOnly(byte[] plaintext) throws PeacemakrException;
+
+  /**
+   * Verify the signed blob. VerifyOnly only works on blob returned by the result of SignOnly().
+   * <p>
+   * @param signedBlob packaged blob containing unencrypted data.
+   * @return message in the clear upon successful verification.
+   * @throws PeacemakrException if an exception occurs during verification attempt.
+   */
+  byte[] verifyOnly(byte[] signedBlob) throws PeacemakrException;
+
+  /**
+   * For visibility or debugging purposes, returns a string which identifies which
    * client and configuration this client is running.
    * @return a debug info.
    */
