@@ -194,6 +194,11 @@ We use the usual fork and PR mechanisms, and in this section, here are some basi
 - `docker-compose up` (just let this run in a separate window while building, integration tests depend on it locally)
 - `./build.sh`
 
+### Hot to release to maven local
+```aidl
+./gradlew install
+```
+
 ### How to release version x.y.z:
 - Delete your folder `./build` to ensure a fresh build of all artifacts.
 - Build everything (see above).  Make sure it completes successfully before proceeding.
