@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ICryptoImpl implements ICrypto {
 
-  private static final String JAVA_SDK_VERSION = "0.0.3";
+  private static final String JAVA_SDK_VERSION = "0.0.4";
   private static final String PERSISTER_PRIV_KEY = "Priv";
   private static final String PERSISTER_PUB_KEY = "Pub";
   private static final String PERSISTER_ASYM_TYPE = "AsymmetricKeyType";
