@@ -97,29 +97,29 @@ public interface ICrypto {
    * Registers to PeaceMakr as a client. The persister is used to detect prior registrations on this client, so safe
    * to call multiple times. Once a successful invocation of Register is executed once, subsequent calls become a
    * noop. One successful call is required before any cryptographic use of this SDK.
-   * 
-   * Registration may fail with invalid apiKey, missing network connectivity, or an invalid persister. On failure,
-   * take corrections action and invoke again.
+   * <p>
+   * @throws PeacemakrException if an exception occurs during the registration. Registration may fail with invalid
+   * apiKey, missing network connectivity, or an invalid persister. On failure, take corrections action and invoke again.
    */
   void register() throws PeacemakrException;
 
   /**
    * Sync all available keys for this client. This invocation will help performance of subsequent encryption
    * and decryption calls.
-   * 
-   * Sync may fail, if registration was not invoked, if there's network connectivity issues, or
-   * unexpected authorization issues.
+   * <p>
+   * @throws PeacemakrException if an exception occurs during the sync. Sync may fail, if registration was not invoked,
+   * if there's network connectivity issues, or unexpected authorization issues.
    */
   void sync() throws PeacemakrException;
 
   /**
    * Encrypt the plaintext, using a random available usedomain.
-   *
-   * @param plainText Plaintext bytes to encrypt.
+   * <p>
+   * @param plaintext Plaintext bytes to encrypt.
    * @return Opaquely packaged ciphertext.
    * @throws PeacemakrException On any error (network connectivity issues, authN issues, etc)
    */
-  byte[] encrypt(byte[] plainText) throws PeacemakrException;
+  byte[] encrypt(byte[] plaintext) throws PeacemakrException;
 
   /**
    * Encrypt the plaintext, but restrict which keys may be used to a Use Domain of this specific name. Names of Use
@@ -128,22 +128,46 @@ public interface ICrypto {
    * Use Domain with the same name. The transitional purity, both Use Domains may be selected for encryption use by
    * clients restricted to one particular name. Then, retiring of one of the two Use Domains is possible without
    * disrupting your deployed application.
-   *
+   * <p>
    * @param plainText     Plaintext to encrypt.
    * @param useDomainName Non-unique User Domain of your organization's.
+   * @return Opaquely packaged ciphertext.
+   * @throws PeacemakrException if an exception occurs during the encryption.
+   * @throws UnsupportedEncodingException if unsupported encoding has been used.
    */
   byte[] encryptInDomain(byte[] plainText, String useDomainName) throws PeacemakrException, UnsupportedEncodingException;
 
   /**
    * Decrypt the opaquely packaged ciphertext and return the original plain text.
-   *
+   * <p>
    * @param cipherText CipherText to decrypt.
+   * @return original plain text.
+   * @throws PeacemakrException if an exception occurs during the decryption.
    */
   byte[] decrypt(byte[] cipherText) throws PeacemakrException;
 
   /**
-   * For visibility or debugging purposes, returns a string whihc identifies which
+   * Sign the message.
+   * <p>
+   * @param plaintext clear text.
+   * @return A signedBlob upon success. The blob contains the originally signed message.
+   * @throws PeacemakrException if an exception occurs during signing attempt.
+   */
+  byte[] signOnly(byte[] plaintext) throws PeacemakrException;
+
+  /**
+   * Verify the signed blob. VerifyOnly only works on blob returned by the result of SignOnly().
+   * <p>
+   * @param signedBlob packaged blob containing unencrypted data.
+   * @return message in the clear upon successful verification.
+   * @throws PeacemakrException if an exception occurs during verification attempt.
+   */
+  byte[] verifyOnly(byte[] signedBlob) throws PeacemakrException;
+
+  /**
+   * For visibility or debugging purposes, returns a string which identifies which
    * client and configuration this client is running.
+   * @return a debug info.
    */
   String getDebugInfo();
 }
@@ -159,7 +183,7 @@ We use the usual fork and PR mechanisms, and in this section, here are some basi
 
 ## Development Environment
 
-### Dependencies:
+### Dependencies (Java8+ is supported):
  - Download and install openjdk: https://jdk.java.net/12/
  - Untar the download, and install it, for example on a mac: `sudo mv jdk-12.0.1.jdk /Library/Java/JavaVirtualMachines/`
  - `export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-12.0.1.jdk/Contents/Home` to your `~/.bash_profile`
@@ -180,7 +204,15 @@ We use the usual fork and PR mechanisms, and in this section, here are some basi
 - Login to github. Browse to the project's release section.  Manually upload the 2 jars (CoreCrypto jar and SDK jar's) built from released tag. Update release notes on build release 
 
 ### How to release to maven central
-- 'vi ~/.gradle/gradle.properties'
+```aidl
+vi ~/.gradle/gradle.properties
+```
 - fill in all secrets in the local gradle.properties (for 'signing.keyId' provide last 8 chars of the signing key)
 - set you gradle build to use local gradle.properties 'export GRADLE_USER_HOME=(echo ~/.gradle)'
-- ./gradlew uploadArchives
+```aidl
+./gradlew uploadArchives
+```  
+
+
+### Released SDK has been compiled using Java8
+https://mvnrepository.com/artifact/io.peacemakr/peacemakr-java-sdk
