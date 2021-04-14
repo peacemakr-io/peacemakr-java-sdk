@@ -1,12 +1,20 @@
 <p align="center">
   <br>
-    <img src="https://admin.peacemakr.io/images/PeacemakrP-Golden.png" width="150"/>
+    <img src="https://admin.peacemakr.io/p_logo.png" width="150"/>
   <br>
 </p>
 
-# Peacemakr Java SDK
+# Peacemakr E2E-Encryption-as-a-Service Java SDK
 
-This SDK provides simple, backward compatible, and secure Application Layer Cryptography with built in Key Lifecycle Management.
+Peacemakr's E2E-Encryption-as-a-Service SDK simplifies your data security with E2E-Encryption service and automated key lifecycle management.
+
+You can easily encrypt your data without worrying about backward compatibility, cross platform portability, or changing security requirements.
+
+Our Zero-Trust capability allows you to customize your security strength to meet the highest standard without having to place your trust in Peacemakr as we don’t have the capacity to get your keys and decrypt your data.
+
+## License
+
+The content of this SDK is open source under [Apache License 2.0](https://github.com/peacemakr-io/peacemakr-java-sdk/blob/master/LICENSE).
 
 ## Quick Start, Integrate this SDK
 
