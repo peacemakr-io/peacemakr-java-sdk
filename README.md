@@ -6,7 +6,7 @@
 
 # Peacemakr E2E-Encryption-as-a-Service Java SDK
 
-Peacemakr's E2E-Encryption-as-a-Service SDK simplify your data security with E2E-Encryption service and automated key lifecycle management.
+Peacemakr's E2E-Encryption-as-a-Service SDK simplifies your data security with E2E-Encryption service and automated key lifecycle management.
 
 You can easily encrypt your data without worrying about backward compatibility, cross platform portability, or changing security requirements.
 
