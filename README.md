@@ -12,6 +12,7 @@ You can easily encrypt your data without worrying about backward compatibility, 
 
 Our Zero-Trust capability allows you to customize your security strength to meet the highest standard without having to place your trust in Peacemakr as we don’t have the capacity to get your keys and decrypt your data.
 
+We take security and trust very seriously. If you believe you have found a security issue, please responsibly disclose by [contacting us](mailto:security@peacemakr.io).
 ## License
 
 The content of this SDK is open source under [Apache License 2.0](https://github.com/peacemakr-io/peacemakr-java-sdk/blob/master/LICENSE).
