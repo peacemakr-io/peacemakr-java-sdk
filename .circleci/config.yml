@@ -25,7 +25,6 @@ jobs:
             sudo echo 1 | sudo update-alternatives --install /usr/bin/jar jar /opt/openjdk-12/bin/jar 7777 &&
             sudo echo 1 | sudo update-alternatives --config java &&
             sudo echo 1 | sudo update-alternatives --config javac &&
-            sudo echo 1 | sudo update-alternatives --config jaotc &&
             java -version
       - run: $(aws ecr get-login --no-include-email --region us-east-2)
       - run: docker-compose pull || true
